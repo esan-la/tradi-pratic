@@ -18,6 +18,7 @@ return new class extends Migration
             $table->time('preferred_time');
             $table->text('message')->nullable();
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
+            $table->string('admin_notes')->nullable();
             $table->string('payment_status')->default('unpaid');
             $table->decimal('amount', 10, 2)->nullable();
             $table->string('payment_method')->nullable();

@@ -44,28 +44,20 @@
                     </button>
                 </form>
             </div>
+
+            <!-- Filtres par catégorie -->
             <div class="col-md-6">
                 <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-                    <a href="{{ route('recipes') }}"
-                       class="btn btn-sm {{ !request('category') ? 'btn-success' : 'btn-outline-success' }}">
-                        Toutes
+                    <a href="{{ route('recipes', ['search' => request('search')]) }}"
+                       class="btn {{ !request('category') ? 'btn-success' : 'btn-outline-success' }}">
+                        <i class="fas fa-th me-1"></i> Toutes
                     </a>
-                    <a href="{{ route('recipes', ['category' => 'plats']) }}"
-                       class="btn btn-sm {{ request('category') == 'plats' ? 'btn-success' : 'btn-outline-success' }}">
-                        Plats
-                    </a>
-                    <a href="{{ route('recipes', ['category' => 'boissons']) }}"
-                       class="btn btn-sm {{ request('category') == 'boissons' ? 'btn-success' : 'btn-outline-success' }}">
-                        Boissons
-                    </a>
-                    <a href="{{ route('recipes', ['category' => 'desserts']) }}"
-                       class="btn btn-sm {{ request('category') == 'desserts' ? 'btn-success' : 'btn-outline-success' }}">
-                        Desserts
-                    </a>
-                    <a href="{{ route('recipes', ['category' => 'remedes']) }}"
-                       class="btn btn-sm {{ request('category') == 'remedes' ? 'btn-success' : 'btn-outline-success' }}">
-                        Remèdes
-                    </a>
+                    @foreach($categories as $category)
+                        <a href="{{ route('recipes', ['category' => $category, 'search' => request('search')]) }}"
+                           class="btn {{ request('category') == $category ? 'btn-success' : 'btn-outline-success' }}">
+                            {{ $category }}
+                        </a>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -75,11 +67,11 @@
 <!-- Recipes Grid -->
 <section class="py-5">
     <div class="container">
-        @if($recipe->count() > 0)
+        @if($recipes->count() > 0)
             <div class="row mb-4">
                 <div class="col-12">
                     <p class="text-muted">
-                        <strong>{{ $recipe->total() }}</strong> recette(s) trouvée(s)
+                        <strong>{{ $recipes->total() }}</strong> recette(s) trouvée(s)
                         @if(request('search'))
                             pour "<strong>{{ request('search') }}</strong>"
                         @endif
@@ -91,7 +83,7 @@
             </div>
 
             <div class="row g-4">
-                @foreach($recipe as $recipe)
+                @foreach($recipes as $recipe)
                     <div class="col-md-6 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm recipe-card">
                             @if($recipe->image)

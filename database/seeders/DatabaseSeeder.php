@@ -12,11 +12,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        $this->call([
+            UserSeeder::class,
+            RealisationSeeder::class,  // Décommentez si vous créez ces seeders
+            RecipeSeeder::class,
+            AppointmentSeeder::class,
+        ]);
+        $this->command->newLine();
+        $this->command->info('✅ Seeding terminé avec succès!');
+        $this->command->info('📊 Base de données prête à l\'emploi');
+        $this->command->newLine();
+        $this->command->warn('🔐 Identifiants admin:');
+        $this->command->line('   Email: athanasesaw@gmail.com');
+        $this->command->line('   Mot de passe: admin@2025');
+        $this->command->warn('🔐 Identifiants de Test Gestionnaire:');
+        $this->command->line('   Email: test@test.com');
+        $this->command->line('   Mot de passe: 12345678');
     }
 }

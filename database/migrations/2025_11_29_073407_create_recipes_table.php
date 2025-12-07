@@ -13,21 +13,22 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description');
-            $table->text('ingredients');
-            $table->text('instructions');
-            $table->string('preparation_time')->nullable();
-            $table->string('cooking_time')->nullable();
+            $table->json('ingredients');           // JSON array
+            $table->json('instructions');          // JSON array
+            $table->integer('prep_time')->nullable();     // En minutes
+            $table->integer('cook_time')->nullable();     // En minutes
             $table->integer('servings')->nullable();
-            $table->string('difficulty')->nullable();
             $table->string('category')->nullable();
-            $table->string('featured_image')->nullable();
-            $table->string('youtube_video_id')->nullable();
+            $table->string('image')->nullable();          // Changé de featured_image
+            $table->string('video_url')->nullable();      // URL complète YouTube
             $table->boolean('is_published')->default(true);
             $table->integer('views_count')->default(0);
             $table->timestamps();
 
+            // Index pour améliorer les performances
             $table->index('slug');
             $table->index(['is_published', 'created_at']);
+            $table->index('views_count');
         });
     }
 

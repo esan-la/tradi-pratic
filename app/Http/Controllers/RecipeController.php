@@ -14,6 +14,12 @@ class RecipeController extends Controller
 
         $query = Recipe::where('is_published', true);
 
+        // Filtrage par catégorie
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // Recherche
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -21,9 +27,12 @@ class RecipeController extends Controller
             });
         }
 
-        $recipe = $query->latest()->paginate(9);
+        $recipes = $query->latest()->paginate(12);
 
-        return view('recettes.index', compact('recipe'));
+        // Liste des catégories (valeurs exactes de la BD)
+        $categories = ['Plats', 'Boissons', 'Desserts', 'Remèdes'];
+
+        return view('recettes.index', compact('recipes', 'categories'));
     }
 
     public function show($slug)
@@ -41,40 +50,3 @@ class RecipeController extends Controller
         return view('recettes.show', compact('recipe', 'relatedRecipes'));
     }
 }
-// class RecipeController extends Controller
-// {
-//     public function index(Request $request)
-//     {
-//         $query = Recipe::published();
-
-//         if ($request->has('category') && $request->category != '') {
-//             $query->where('category', $request->category);
-//         }
-
-//         if ($request->has('search') && $request->search != '') {
-//             $query->where(function($q) use ($request) {
-//                 $q->where('title', 'like', '%' . $request->search . '%')
-//                   ->orWhere('description', 'like', '%' . $request->search . '%');
-//             });
-//         }
-
-//         $recipes = $query->latest()->paginate(12);
-//         $popularRecipes = Recipe::published()->popular(5)->get();
-
-//         return view('recettes.index', compact('recipes', 'popularRecipes'));
-//     }
-
-//     public function show($slug)
-//     {
-//         $recipe = Recipe::where('slug', $slug)->published()->firstOrFail();
-//         $recipe->incrementViews();
-
-//         $relatedRecipes = Recipe::published()
-//             ->where('category', $recipe->category)
-//             ->where('id', '!=', $recipe->id)
-//             ->limit(3)
-//             ->get();
-
-//         return view('recettes.show', compact('recipe', 'relatedRecipes'));
-//     }
-// }
