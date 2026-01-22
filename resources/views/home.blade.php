@@ -11,7 +11,7 @@
                 <img src="{{ asset('images/image1.jpg') }}" class="d-block w-100" alt="Adja Amsetou">
                 <div class="carousel-caption">
                     <div class="container">
-                        <h1 class="display-3 fw-bold mb-3">Bienvenue chez Adja Amsetou</h1>
+                        <h2 class="display-3 fw-bold mb-3">Bienvenue chez Adja Amsetou</h2>
                         <p class="lead mb-4">Tradi-praticienne reconnue à Komsilga</p>
                         <a href="{{ route('consultations') }}" class="btn btn-success btn-lg me-2">
                             <i class="fas fa-calendar-check"></i> Prendre Rendez-vous

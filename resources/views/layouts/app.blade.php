@@ -99,8 +99,7 @@
                     <a href="#" class="btn btn-success ms-3">
                         <i class="fas fa-calendar-check"></i> Faire Un Don
                     </a>
-                </div>
-                {{-- ====================== --}}
+                    {{-- ====================== --}}
                 {{--      MENU UTILISATEUR  --}}
                 {{-- ====================== --}}
                 <div class="nav-item dropdown user-dropdown ms-2">
@@ -158,6 +157,8 @@
 
                     </div>
                 </div>
+                </div>
+
 
                 </div>
             </div>

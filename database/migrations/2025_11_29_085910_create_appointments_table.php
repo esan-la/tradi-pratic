@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone');
-            $table->enum('consultation_type', ['Consultation traditionnelle', 'Prières et bénédictions', 'Soins naturels', 'Consultation spirituelle', 'Autres']);
+            $table->enum('consultation_type', ['traditional', 'prayer', 'natural_care', 'Consultation_spirituelle', 'Autres'])->default('Autres');
             $table->date('preferred_date');
             $table->time('preferred_time');
             $table->text('message')->nullable();

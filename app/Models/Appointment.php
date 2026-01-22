@@ -60,6 +60,7 @@ class Appointment extends Model
             'traditional' => 'Consultation Traditionnelle',
             'prayer' => 'Prière et Rituels',
             'natural_care' => 'Soins Naturels',
+            'Consultation_spirituelle' => 'Consultation Spirituelle',
             default => 'Autre',
         };
     }

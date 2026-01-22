@@ -102,7 +102,7 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 .hero-section {
     position: relative;
-    height: 600px;
+    height: 400px;
 }
 
 .hero-section .carousel-item {
@@ -428,11 +428,11 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 .hero-section .carousel-caption h1,
 .hero-section .carousel-caption h2 {
-    color: #ff0606; /* vert sur fond blanc */
+    color: #FFFFFF; /*#ff0606; /* vert sur fond blanc */
     display: inline-block;
     white-space: nowrap;
     overflow: hidden;
-    animation: fadeInRight 8s linear infinite;
+    animation: fadeInRight 10s linear infinite;
     transition: color 0.5s ease;
 }
 
