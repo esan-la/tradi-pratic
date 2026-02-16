@@ -10,18 +10,17 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('appointment_id')->constrained()->onDelete('cascade');
+            $table->string('payer_name');
+            $table->string('payer_email')->nullable();
+            $table->string('payer_phone')->nullable();
             $table->string('transaction_id')->unique();
             $table->string('payment_method');
             $table->decimal('amount', 10, 2);
-            $table->string('currency')->default('XOF');
+            $table->string('currency', 10)->default('XOF');
             $table->enum('status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
             $table->json('payment_data')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
-
-            $table->index('transaction_id');
-            $table->index(['status', 'created_at']);
         });
     }
 

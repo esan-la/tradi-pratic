@@ -15,9 +15,6 @@ return new class extends Migration
             $table->string('type')->default('string');
             $table->string('group')->default('general');
             $table->timestamps();
-
-            $table->index('key');
-            $table->index('group');
         });
     }
 

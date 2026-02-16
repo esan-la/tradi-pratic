@@ -10,7 +10,8 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'appointment_id',
+        'user_id',
+        'payer_type',
         'transaction_id',
         'payment_method',
         'amount',
@@ -21,26 +22,45 @@ class Payment extends Model
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
         'payment_data' => 'array',
         'paid_at' => 'datetime',
-        'amount' => 'decimal:2',
     ];
 
-    public function appointment()
+    // Relations
+    public function user()
     {
-        return $this->belongsTo(Appointment::class);
+        return $this->belongsTo(User::class);
     }
 
+    public function paymentAppointments()
+    {
+        return $this->hasMany(PaymentAppointment::class);
+    }
+
+    public function paymentProducts()
+    {
+        return $this->hasMany(PaymentProduct::class);
+    }
+
+    public function paymentHotelReservations()
+    {
+        return $this->hasMany(PaymentHotelReservation::class);
+    }
+
+    public function paymentDonations()
+    {
+        return $this->hasMany(PaymentDonation::class);
+    }
+
+    // Scopes
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
     }
 
-    public function markAsCompleted()
+    public function scopePending($query)
     {
-        $this->update([
-            'status' => 'completed',
-            'paid_at' => now(),
-        ]);
+        return $query->where('status', 'pending');
     }
 }

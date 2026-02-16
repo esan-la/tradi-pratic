@@ -22,11 +22,18 @@
             <div class="col-lg-8">
                 <!-- Image principale -->
                 @if($recipe->image)
-                    <div class="position-relative mb-4">
+                    <div class="position-relative mb-4 recipe-image-container">
                         <img src="{{ asset('storage/' . $recipe->image) }}"
                              class="img-fluid rounded shadow-sm w-100"
                              alt="{{ $recipe->title }}"
-                             style="max-height: 500px; object-fit: cover;">
+                             style="max-height: 500px; object-fit: cover; cursor: zoom-in;"
+                             onclick="openImageModal()"
+                             onerror="this.src='{{ asset('images/recipe-placeholder.jpg') }}'">
+
+                        <!-- Badge difficulté (si disponible) -->
+                        <span class="position-absolute top-0 end-0 m-3 badge bg-primary">
+                            <i class="fas fa-utensils me-1"></i>Recette Traditionnelle
+                        </span>
                     </div>
                 @endif
 
@@ -41,7 +48,7 @@
                 <!-- Informations rapides -->
                 <div class="row g-3 mb-5">
                     <div class="col-md-4">
-                        <div class="card border-0 bg-light h-100">
+                        <div class="card border-0 bg-light h-100 info-card">
                             <div class="card-body text-center">
                                 <i class="fas fa-clock fa-2x text-primary mb-3"></i>
                                 <h6 class="mb-2">Préparation</h6>
@@ -50,7 +57,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card border-0 bg-light h-100">
+                        <div class="card border-0 bg-light h-100 info-card">
                             <div class="card-body text-center">
                                 <i class="fas fa-fire fa-2x text-danger mb-3"></i>
                                 <h6 class="mb-2">Cuisson</h6>
@@ -59,7 +66,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card border-0 bg-light h-100">
+                        <div class="card border-0 bg-light h-100 info-card">
                             <div class="card-body text-center">
                                 <i class="fas fa-users fa-2x text-success mb-3"></i>
                                 <h6 class="mb-2">Portions</h6>
@@ -88,14 +95,19 @@
                     @if($recipe->ingredients && count($recipe->ingredients) > 0)
                         <div class="card border-0 shadow-sm">
                             <div class="card-body">
-                                <ul class="list-unstyled mb-0">
+                                <ul class="list-unstyled mb-0 ingredients-list">
                                     @foreach($recipe->ingredients as $ingredient)
-                                        <li class="mb-3 d-flex align-items-start">
+                                        <li class="mb-3 d-flex align-items-start ingredient-item">
                                             <i class="fas fa-check-circle text-success me-3 mt-1"></i>
                                             <span>{{ $ingredient }}</span>
                                         </li>
                                     @endforeach
                                 </ul>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <button class="btn btn-sm btn-outline-primary" onclick="printIngredients()">
+                                    <i class="fas fa-print me-2"></i>Imprimer la liste
+                                </button>
                             </div>
                         </div>
                     @else
@@ -118,15 +130,17 @@
                         <div class="card border-0 shadow-sm">
                             <div class="card-body">
                                 @foreach($recipe->instructions as $index => $instruction)
-                                    <div class="d-flex mb-4 pb-4 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    <div class="d-flex mb-4 pb-4 {{ !$loop->last ? 'border-bottom' : '' }} instruction-step">
                                         <div class="me-3">
-                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                                                 style="width: 40px; height: 40px; min-width: 40px;">
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center step-number"
+                                                 style="width: 45px; height: 45px; min-width: 45px;">
                                                 <strong>{{ $index + 1 }}</strong>
                                             </div>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <p class="mb-0" style="line-height: 1.8;">{{ $instruction }}</p>
+                                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
+                                                {{ $instruction }}
+                                            </p>
                                         </div>
                                     </div>
                                 @endforeach
@@ -162,13 +176,30 @@
                     </div>
                 @endif
 
+                <!-- Conseils -->
+                <div class="mb-5">
+                    <div class="card border-0 shadow-sm bg-light">
+                        <div class="card-body">
+                            <h5 class="mb-3">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                Conseils du chef
+                            </h5>
+                            <ul class="mb-0">
+                                <li class="mb-2">Préparez tous vos ingrédients avant de commencer la cuisson</li>
+                                <li class="mb-2">Respectez les temps de cuisson pour un résultat optimal</li>
+                                <li class="mb-0">N'hésitez pas à ajuster les épices selon vos goûts</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Boutons de partage -->
                 <div class="mb-5">
                     <h5 class="mb-3">
                         <i class="fas fa-share-alt text-primary me-2"></i>
                         Partager cette recette
                     </h5>
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-wrap gap-2 p-3 bg-light rounded">
                         <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
                            target="_blank"
                            class="btn btn-outline-primary">
@@ -192,13 +223,16 @@
                         <button onclick="copyToClipboard()" class="btn btn-outline-secondary">
                             <i class="fas fa-link me-2"></i>Copier le lien
                         </button>
+                        <button onclick="printRecipe()" class="btn btn-outline-dark">
+                            <i class="fas fa-print me-2"></i>Imprimer
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Sidebar -->
             <div class="col-lg-4">
-                <!-- Informations nutritionnelles (optionnel) -->
+                <!-- Informations -->
                 <div class="card border-0 shadow-sm mb-4 sticky-top" style="top: 20px;">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
@@ -240,7 +274,7 @@
                             <li class="mb-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span><i class="fas fa-eye text-secondary me-2"></i>Vues</span>
-                                    <strong>{{ $recipe->views_count }}</strong>
+                                    <strong>{{ $recipe->views_count ?? 0 }}</strong>
                                 </div>
                             </li>
                         </ul>
@@ -261,13 +295,19 @@
                                     <a href="{{ route('recipes.show', $related->slug) }}"
                                        class="text-decoration-none text-dark d-block">
                                         @if($related->image)
-                                            <img src="{{ asset('storage/' . $related->image) }}"
-                                                 class="img-fluid rounded mb-2 w-100"
-                                                 alt="{{ $related->title }}"
-                                                 style="height: 150px; object-fit: cover;"
-                                                 loading="lazy">
+                                            <div class="position-relative mb-2 related-recipe-image">
+                                                <img src="{{ asset('storage/' . $related->image) }}"
+                                                     class="img-fluid rounded w-100"
+                                                     alt="{{ $related->title }}"
+                                                     style="height: 150px; object-fit: cover;"
+                                                     onerror="this.src='{{ asset('images/recipe-placeholder.jpg') }}'"
+                                                     loading="lazy">
+                                            </div>
                                         @endif
                                         <h6 class="mb-2">{{ $related->title }}</h6>
+                                        <p class="text-muted small mb-2">
+                                            {{ Str::limit($related->description, 60) }}
+                                        </p>
                                         <div class="d-flex justify-content-between text-muted small">
                                             <span>
                                                 <i class="far fa-clock me-1"></i>
@@ -294,6 +334,26 @@
     </div>
 </section>
 
+<!-- Modal Image -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white">{{ $recipe->title }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                @if($recipe->image)
+                    <img src="{{ asset('storage/' . $recipe->image) }}"
+                         class="img-fluid w-100"
+                         alt="{{ $recipe->title }}"
+                         style="max-height: 85vh; object-fit: contain;">
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- CTA Section -->
 <section class="py-5 bg-light">
     <div class="container">
@@ -316,6 +376,81 @@
 
 @push('styles')
 <style>
+    /* Amélioration qualité images */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+
+    .recipe-image-container img,
+    .related-recipe-image img {
+        image-rendering: auto;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .recipe-image-container:hover img {
+        transform: scale(1.02);
+    }
+
+    .related-recipe-image:hover img {
+        transform: scale(1.05);
+    }
+
+    /* Info cards */
+    .info-card {
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-card i {
+        transition: transform 0.3s ease;
+    }
+
+    .info-card:hover i {
+        transform: scale(1.2);
+    }
+
+    /* Ingrédients */
+    .ingredient-item {
+        transition: all 0.3s ease;
+        padding: 8px;
+        border-radius: 5px;
+    }
+
+    .ingredient-item:hover {
+        background-color: #f8f9fa;
+        padding-left: 15px;
+    }
+
+    /* Instructions */
+    .instruction-step {
+        transition: all 0.3s ease;
+    }
+
+    .instruction-step:hover {
+        background-color: #f8f9fa;
+        padding: 15px !important;
+        border-radius: 8px;
+    }
+
+    .step-number {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .instruction-step:hover .step-number {
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(13, 110, 253, 0.4);
+    }
+
+    /* Hover effects */
     .hover-bg-light {
         transition: background-color 0.3s ease;
     }
@@ -324,7 +459,7 @@
         background-color: #f8f9fa !important;
     }
 
-    /* Animation pour les étapes */
+    /* Animation */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -338,17 +473,6 @@
 
     .card {
         animation: fadeInUp 0.5s ease-out;
-    }
-
-    /* Style pour les listes d'ingrédients */
-    .list-unstyled li {
-        transition: all 0.3s ease;
-    }
-
-    .list-unstyled li:hover {
-        padding-left: 10px;
-        background-color: #f8f9fa;
-        border-radius: 5px;
     }
 
     /* Sticky sidebar */
@@ -365,20 +489,36 @@
         border: none;
     }
 
-    /* Style pour les numéros d'étapes */
-    .bg-primary {
-        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    /* Print styles */
+    @media print {
+        .btn, .card-header, nav, footer, .share-buttons {
+            display: none !important;
+        }
+
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+
+        body {
+            font-size: 12pt;
+        }
     }
 </style>
 @endpush
 
 @push('scripts')
 <script>
+    // Modal image
+    function openImageModal() {
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+    }
+
     // Fonction pour copier le lien
     function copyToClipboard() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(function() {
-            // Afficher un message de succès
             const button = event.target.closest('button');
             const originalText = button.innerHTML;
             button.innerHTML = '<i class="fas fa-check me-2"></i>Copié !';
@@ -395,10 +535,39 @@
         });
     }
 
+    // Imprimer la recette
+    function printRecipe() {
+        window.print();
+    }
+
+    // Imprimer juste les ingrédients
+    function printIngredients() {
+        const ingredients = document.querySelector('.ingredients-list').innerHTML;
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Liste des ingrédients</title>');
+        printWindow.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;} li{margin-bottom:10px;}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h1>{{ $recipe->title }}</h1>');
+        printWindow.document.write('<h2>Ingrédients</h2>');
+        printWindow.document.write('<ul>' + ingredients + '</ul>');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+
     // Incrémenter le compteur de vues (optionnel)
     document.addEventListener('DOMContentLoaded', function() {
-        // Vous pouvez ajouter une requête AJAX pour incrémenter les vues
-        // fetch('/recipes/{{ $recipe->slug }}/increment-views', { method: 'POST' });
+        // Animation des étapes au scroll
+        const steps = document.querySelectorAll('.instruction-step');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.5s ease-out';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        steps.forEach(step => observer.observe(step));
     });
 </script>
 @endpush

@@ -24,12 +24,11 @@
                 <div class="position-relative mb-4">
                     @if($realisation->image)
                         <img src="{{ asset('storage/' . $realisation->image) }}"
-                             class="img-fluid rounded shadow-sm w-100"
+                             class="img-fluid rounded shadow-sm w-100 main-image"
                              alt="{{ $realisation->title }}"
-                             style="max-height: 500px; object-fit: cover; cursor: pointer;"
-                             data-bs-toggle="modal"
-                             data-bs-target="#imageModal"
-                             data-image="{{ asset('storage/' . $realisation->image) }}">
+                             style="max-height: 500px; object-fit: cover; cursor: zoom-in;"
+                             onclick="openGallery(0)"
+                             onerror="this.src='{{ asset('images/placeholder.jpg') }}'">
                     @endif
 
                     <!-- Badge vedette si applicable -->
@@ -43,6 +42,14 @@
                     <span class="position-absolute top-0 start-0 m-3 badge bg-primary">
                         {{ $realisation->category }}
                     </span>
+
+                    <!-- Compteur photos -->
+                    @if($realisation->hasGallery())
+                        <span class="position-absolute bottom-0 end-0 m-3 badge bg-dark bg-opacity-75">
+                            <i class="fas fa-images me-1"></i>
+                            {{ $realisation->gallery_count + 1 }} photos
+                        </span>
+                    @endif
                 </div>
 
                 <!-- Titre et métadonnées -->
@@ -92,16 +99,20 @@
                         </h3>
                         <div class="row g-3">
                             @foreach($realisation->gallery as $index => $image)
-                                <div class="col-md-4">
-                                    <div class="position-relative overflow-hidden rounded shadow-sm gallery-item">
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="gallery-item position-relative overflow-hidden rounded shadow-sm">
                                         <img src="{{ asset('storage/' . $image) }}"
                                              class="img-fluid w-100"
                                              alt="Galerie {{ $loop->iteration }}"
-                                             style="height: 250px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;"
-                                             data-bs-toggle="modal"
-                                             data-bs-target="#imageModal"
-                                             data-image="{{ asset('storage/' . $image) }}"
+                                             style="height: 250px; object-fit: cover; cursor: zoom-in;"
+                                             onclick="openGallery({{ $loop->iteration }})"
+                                             onerror="this.src='{{ asset('images/placeholder.jpg') }}'"
                                              loading="lazy">
+
+                                        <!-- Overlay au survol -->
+                                        <div class="gallery-overlay">
+                                            <i class="fas fa-search-plus fa-2x"></i>
+                                        </div>
 
                                         <!-- Numéro de l'image -->
                                         <span class="position-absolute bottom-0 end-0 m-2 badge bg-dark bg-opacity-75">
@@ -277,6 +288,7 @@
                                                      class="img-fluid rounded w-100"
                                                      alt="{{ $related->title }}"
                                                      style="height: 150px; object-fit: cover;"
+                                                     onerror="this.src='{{ asset('images/placeholder.jpg') }}'"
                                                      loading="lazy">
                                                 @if($related->is_featured)
                                                     <span class="position-absolute top-0 end-0 m-2 badge bg-warning text-dark">
@@ -331,21 +343,59 @@
     </div>
 </section>
 
-<!-- Modal pour affichage plein écran des images -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-body p-0 position-relative">
-                <button type="button"
-                        class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"
-                        style="z-index: 1051;"></button>
-                <img id="modalImage"
+<!-- Modal Galerie Amélioré -->
+<div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-images me-2"></i>
+                    <span id="galleryTitle">{{ $realisation->title }}</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 d-flex align-items-center justify-content-center position-relative">
+                <!-- Image principale -->
+                <img id="galleryImage"
                      src=""
-                     class="img-fluid w-100 rounded"
+                     class="img-fluid"
                      alt="Image en grand"
-                     style="max-height: 90vh; object-fit: contain;">
+                     style="max-height: 85vh; max-width: 100%; object-fit: contain;">
+
+                <!-- Boutons de navigation -->
+                <button class="btn btn-light btn-lg position-absolute start-0 top-50 translate-middle-y ms-3"
+                        id="prevBtn"
+                        onclick="navigateGallery(-1)"
+                        style="opacity: 0.8;">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="btn btn-light btn-lg position-absolute end-0 top-50 translate-middle-y me-3"
+                        id="nextBtn"
+                        onclick="navigateGallery(1)"
+                        style="opacity: 0.8;">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <!-- Compteur -->
+                <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                    <span class="badge bg-dark bg-opacity-75 px-4 py-2 fs-6">
+                        <span id="currentImageNumber">1</span> / <span id="totalImages">1</span>
+                    </span>
+                </div>
+
+                <!-- Loader -->
+                <div id="imageLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Miniatures -->
+            <div class="modal-footer border-0 bg-dark p-3" style="overflow-x: auto;">
+                <div class="d-flex gap-2" id="thumbnailsContainer">
+                    <!-- Les miniatures seront insérées ici par JavaScript -->
+                </div>
             </div>
         </div>
     </div>
@@ -373,44 +423,104 @@
 
 @push('styles')
 <style>
+    /* Amélioration qualité images */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        -ms-interpolation-mode: nearest-neighbor;
+    }
+
+    .main-image,
+    .gallery-item img {
+        image-rendering: auto;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
+    /* Galerie */
+    .gallery-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .gallery-item img {
+        transition: transform 0.5s ease;
+        will-change: transform;
+    }
+
+    .gallery-item:hover img {
+        transform: scale(1.1);
+    }
+
+    .gallery-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(45, 106, 79, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+        z-index: 1;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+        opacity: 1;
+    }
+
+    /* Modal */
+    .modal-fullscreen .modal-body {
+        background: #000;
+    }
+
+    #galleryImage {
+        transition: opacity 0.3s ease;
+    }
+
+    /* Miniatures */
+    #thumbnailsContainer {
+        white-space: nowrap;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 3px solid transparent;
+        border-radius: 0.25rem;
+        transition: all 0.3s ease;
+        opacity: 0.6;
+    }
+
+    .thumbnail:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .thumbnail.active {
+        border-color: #2d6a4f;
+        opacity: 1;
+    }
+
+    /* Hover effects */
     .hover-bg-light {
         transition: background-color 0.3s ease;
     }
 
     .hover-bg-light:hover {
         background-color: #f8f9fa !important;
-    }
-
-    .gallery-item {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .gallery-item img {
-        transition: transform 0.3s ease;
-    }
-
-    .gallery-item:hover img {
-        transform: scale(1.05);
-    }
-
-    .gallery-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
-        opacity: 0;
-        transition: opacity 0.3s;
-        z-index: 1;
-        border-radius: 0.25rem;
-        pointer-events: none;
-    }
-
-    .gallery-item:hover::before {
-        opacity: 1;
     }
 
     /* Sticky sidebar */
@@ -420,6 +530,16 @@
             top: 20px;
             z-index: 1020;
         }
+    }
+
+    /* Navigation buttons */
+    #prevBtn, #nextBtn {
+        transition: all 0.3s ease;
+    }
+
+    #prevBtn:hover, #nextBtn:hover {
+        opacity: 1 !important;
+        transform: translateY(-50%) scale(1.1);
     }
 
     /* Animation */
@@ -442,30 +562,136 @@
     .ratio iframe {
         border: none;
     }
+
+    /* Amélioration mobile */
+    @media (max-width: 768px) {
+        #prevBtn, #nextBtn {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 60px;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-    // Script pour le modal d'image
-    document.addEventListener('DOMContentLoaded', function() {
-        const imageModal = document.getElementById('imageModal');
-        const modalImage = document.getElementById('modalImage');
+    // Données de la galerie
+    const galleryImages = [
+        @if($realisation->image)
+        {
+            url: '{{ asset('storage/' . $realisation->image) }}',
+            alt: '{{ $realisation->title }} - Image principale'
+        },
+        @endif
+        @if($realisation->hasGallery())
+            @foreach($realisation->gallery as $image)
+            {
+                url: '{{ asset('storage/' . $image) }}',
+                alt: '{{ $realisation->title }} - Galerie {{ $loop->iteration }}'
+            },
+            @endforeach
+        @endif
+    ];
 
-        if (imageModal && modalImage) {
-            imageModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const imageUrl = button.getAttribute('data-image');
-                modalImage.src = imageUrl;
-            });
+    let currentImageIndex = 0;
+    const galleryModal = new bootstrap.Modal(document.getElementById('galleryModal'));
+    const galleryImage = document.getElementById('galleryImage');
+    const imageLoader = document.getElementById('imageLoader');
+    const currentImageNumber = document.getElementById('currentImageNumber');
+    const totalImages = document.getElementById('totalImages');
+    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
 
-            // Fermer le modal en cliquant sur l'image
-            modalImage.addEventListener('click', function() {
-                const modalInstance = bootstrap.Modal.getInstance(imageModal);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-            });
+    // Initialiser la galerie
+    function initGallery() {
+        totalImages.textContent = galleryImages.length;
+
+        // Créer les miniatures
+        galleryImages.forEach((img, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = img.url;
+            thumb.alt = img.alt;
+            thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
+            thumb.onclick = () => openGallery(index);
+            thumbnailsContainer.appendChild(thumb);
+        });
+    }
+
+    // Ouvrir la galerie à un index spécifique
+    function openGallery(index) {
+        currentImageIndex = index;
+        updateGalleryImage();
+        galleryModal.show();
+    }
+
+    // Mettre à jour l'image affichée
+    function updateGalleryImage() {
+        if (galleryImages.length === 0) return;
+
+        // Afficher le loader
+        imageLoader.classList.remove('d-none');
+        galleryImage.style.opacity = '0.3';
+
+        const img = galleryImages[currentImageIndex];
+
+        // Précharger l'image
+        const preloadImg = new Image();
+        preloadImg.onload = function() {
+            galleryImage.src = img.url;
+            galleryImage.alt = img.alt;
+            galleryImage.style.opacity = '1';
+            imageLoader.classList.add('d-none');
+        };
+        preloadImg.src = img.url;
+
+        // Mettre à jour le compteur
+        currentImageNumber.textContent = currentImageIndex + 1;
+
+        // Mettre à jour les miniatures
+        document.querySelectorAll('.thumbnail').forEach((thumb, index) => {
+            thumb.classList.toggle('active', index === currentImageIndex);
+        });
+
+        // Scroller vers la miniature active
+        const activeThumbnail = thumbnailsContainer.querySelector('.thumbnail.active');
+        if (activeThumbnail) {
+            activeThumbnail.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
+        // Gérer les boutons de navigation
+        document.getElementById('prevBtn').disabled = currentImageIndex === 0;
+        document.getElementById('nextBtn').disabled = currentImageIndex === galleryImages.length - 1;
+    }
+
+    // Navigation dans la galerie
+    function navigateGallery(direction) {
+        currentImageIndex += direction;
+
+        // Boucler sur les images
+        if (currentImageIndex < 0) {
+            currentImageIndex = galleryImages.length - 1;
+        } else if (currentImageIndex >= galleryImages.length) {
+            currentImageIndex = 0;
+        }
+
+        updateGalleryImage();
+    }
+
+    // Navigation au clavier
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('galleryModal').classList.contains('show')) {
+            if (e.key === 'ArrowLeft') {
+                navigateGallery(-1);
+            } else if (e.key === 'ArrowRight') {
+                navigateGallery(1);
+            } else if (e.key === 'Escape') {
+                galleryModal.hide();
+            }
         }
     });
 
@@ -488,5 +714,12 @@
             alert('Erreur lors de la copie du lien');
         });
     }
+
+    // Initialiser au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        if (galleryImages.length > 0) {
+            initGallery();
+        }
+    });
 </script>
 @endpush

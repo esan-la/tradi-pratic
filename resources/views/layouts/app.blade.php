@@ -96,7 +96,7 @@
                             <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
                         </li>
                     </ul>
-                    <a href="#" class="btn btn-success ms-3">
+                    <a href="{{ route('donate') }}" class="btn btn-success ms-3">
                         <i class="fas fa-calendar-check"></i> Faire Un Don
                     </a>
                     {{-- ====================== --}}

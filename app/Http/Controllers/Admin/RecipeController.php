@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Recipe;
+use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class RecipeController extends Controller
 {
+    protected $mediaService;
+
+    public function __construct(MediaStorageService $mediaService)
+    {
+        $this->mediaService = $mediaService;
+    }
+
     /**
      * Display a listing of recipes
      */
@@ -49,7 +56,7 @@ class RecipeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'ingredients' => 'required|array',
@@ -59,24 +66,51 @@ class RecipeController extends Controller
             'prep_time' => 'nullable|integer|min:0',
             'cook_time' => 'nullable|integer|min:0',
             'servings' => 'nullable|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|max:10240', // 10MB
             'video_url' => 'nullable|url',
             'is_published' => 'boolean',
         ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->title);
+        // Générer le slug
+        $validated['slug'] = Str::slug($validated['title']);
 
-        // Gestion de l'image
+        // Assurer l'unicité du slug
+        $originalSlug = $validated['slug'];
+        $counter = 1;
+        while (Recipe::where('slug', $validated['slug'])->exists()) {
+            $validated['slug'] = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+
+        // Upload de l'image si fournie
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('recipes', 'public');
+            $validated['image'] = $this->mediaService->uploadImage(
+                $request->file('image'),
+                'recipes'
+            );
         }
 
         // Filtrer les ingrédients et instructions vides
-        $data['ingredients'] = array_filter($request->ingredients, fn($item) => !empty($item));
-        $data['instructions'] = array_filter($request->instructions, fn($item) => !empty($item));
+        $validated['ingredients'] = array_values(array_filter($validated['ingredients'], fn($item) => !empty($item)));
+        $validated['instructions'] = array_values(array_filter($validated['instructions'], fn($item) => !empty($item)));
 
-        Recipe::create($data);
+        // Gérer le checkbox is_published
+        $validated['is_published'] = $request->has('is_published') && $request->is_published == '1';
+
+        // Créer la recette
+        $recipe = Recipe::create($validated);
+
+        // Logger l'activité
+        try {
+            if (function_exists('activity')) {
+                activity()
+                    ->performedOn($recipe)
+                    ->causedBy(auth()->user())
+                    ->log('Création de la recette : ' . $recipe->title);
+            }
+        } catch (\Exception $e) {
+            // Ignorer si activity log n'est pas disponible
+        }
 
         return redirect()->route('admin.recipes.index')
             ->with('success', 'Recette créée avec succès.');
@@ -103,7 +137,7 @@ class RecipeController extends Controller
      */
     public function update(Request $request, Recipe $recipe)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'ingredients' => 'required|array',
@@ -113,28 +147,58 @@ class RecipeController extends Controller
             'prep_time' => 'nullable|integer|min:0',
             'cook_time' => 'nullable|integer|min:0',
             'servings' => 'nullable|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|max:10240', // 10MB, optionnel en édition
             'video_url' => 'nullable|url',
             'is_published' => 'boolean',
         ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->title);
+        // Générer le slug
+        $validated['slug'] = Str::slug($validated['title']);
 
-        // Gestion de l'image
+        // Assurer l'unicité du slug (sauf pour la recette actuelle)
+        $originalSlug = $validated['slug'];
+        $counter = 1;
+        while (Recipe::where('slug', $validated['slug'])
+            ->where('id', '!=', $recipe->id)
+            ->exists()) {
+            $validated['slug'] = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+
+        // Upload de la nouvelle image si fournie
         if ($request->hasFile('image')) {
             // Supprimer l'ancienne image
             if ($recipe->image) {
-                Storage::disk('public')->delete($recipe->image);
+                $this->mediaService->delete($recipe->image);
             }
-            $data['image'] = $request->file('image')->store('recipes', 'public');
+
+            $validated['image'] = $this->mediaService->uploadImage(
+                $request->file('image'),
+                'recipes'
+            );
         }
 
         // Filtrer les ingrédients et instructions vides
-        $data['ingredients'] = array_filter($request->ingredients, fn($item) => !empty($item));
-        $data['instructions'] = array_filter($request->instructions, fn($item) => !empty($item));
+        $validated['ingredients'] = array_values(array_filter($validated['ingredients'], fn($item) => !empty($item)));
+        $validated['instructions'] = array_values(array_filter($validated['instructions'], fn($item) => !empty($item)));
 
-        $recipe->update($data);
+        // Gérer le checkbox is_published
+        $validated['is_published'] = $request->has('is_published') && $request->is_published == '1';
+
+        // Mettre à jour
+        $recipe->update($validated);
+
+        // Logger l'activité
+        try {
+            if (function_exists('activity')) {
+                activity()
+                    ->performedOn($recipe)
+                    ->causedBy(auth()->user())
+                    ->log('Modification de la recette : ' . $recipe->title);
+            }
+        } catch (\Exception $e) {
+            // Ignorer si activity log n'est pas disponible
+        }
 
         return redirect()->route('admin.recipes.index')
             ->with('success', 'Recette mise à jour avec succès.');
@@ -145,12 +209,25 @@ class RecipeController extends Controller
      */
     public function destroy(Recipe $recipe)
     {
+        $title = $recipe->title;
+
         // Supprimer l'image associée
         if ($recipe->image) {
-            Storage::disk('public')->delete($recipe->image);
+            $this->mediaService->delete($recipe->image);
         }
 
         $recipe->delete();
+
+        // Logger l'activité
+        try {
+            if (function_exists('activity')) {
+                activity()
+                    ->causedBy(auth()->user())
+                    ->log('Suppression de la recette : ' . $title);
+            }
+        } catch (\Exception $e) {
+            // Ignorer si activity log n'est pas disponible
+        }
 
         return redirect()->route('admin.recipes.index')
             ->with('success', 'Recette supprimée avec succès.');
