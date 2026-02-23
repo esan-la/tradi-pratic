@@ -125,15 +125,15 @@
                         <div class="mb-3">
                             <h6><i class="fas fa-phone text-success me-2"></i>Téléphone</h6>
                             <p class="text-muted">
-                                <a href="tel:+22670123456" class="text-decoration-none">+226 70 12 34 56</a>
+                                <a href="{{ contact_phone_link() }}" class="text-decoration-none">{{ config('contact.phone') }}</a>
                             </p>
                         </div>
 
                         <div class="mb-3">
                             <h6><i class="fas fa-envelope text-primary me-2"></i>Email</h6>
                             <p class="text-muted">
-                                <a href="mailto:contact@adja-amsetou.com" class="text-decoration-none">
-                                    contact@adja-amsetou.com
+                                <a href="{{ contact_email_link() }}" class="text-decoration-none">
+                                    {{ config('contact.email') }}
                                 </a>
                             </p>
                         </div>
@@ -151,16 +151,16 @@
                     <div class="card-body">
                         <h4 class="mb-3">Suivez-nous</h4>
                         <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-outline-primary" target="_blank">
+                            <a href="{{ config('contact.social.facebook') }}" class="btn btn-outline-primary" target="_blank">
                                 <i class="fab fa-facebook-f me-2"></i>Facebook
                             </a>
-                            <a href="#" class="btn btn-outline-danger" target="_blank">
+                            <a href="{{ config('contact.social.youtube') }}" class="btn btn-outline-danger" target="_blank">
                                 <i class="fab fa-youtube me-2"></i>YouTube
                             </a>
-                            <a href="#" class="btn btn-outline-info" target="_blank">
+                            <a href="{{ config('contact.social.tiktok') }}" class="btn btn-outline-info" target="_blank">
                                 <i class="fab fa-tiktok me-2"></i>TikTok
                             </a>
-                            <a href="#" class="btn btn-outline-dark" target="_blank">
+                            <a href="{{ config('contact.social.instagram') }}" class="btn btn-outline-dark" target="_blank">
                                 <i class="fab fa-instagram me-2"></i>Instagram
                             </a>
                         </div>

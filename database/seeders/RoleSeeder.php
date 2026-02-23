@@ -101,9 +101,9 @@ class RoleSeeder extends Seeder
         $managerPermissions = DB::table('permissions')
             ->where(function($query) {
                 $query
-                    // Gestion des disponibilités (nouveau)
+                    // Gestion des disponibilités
                     ->where('name', 'like', 'availabilities.%')
-                    // Gestion des événements (nouveau)
+                    // Gestion des événements
                     ->orWhere('name', 'like', 'events.%')
                     // Gestion des rendez-vous
                     ->orWhere('name', 'like', 'appointments.%')
@@ -117,6 +117,10 @@ class RoleSeeder extends Seeder
                     ->orWhere('name', 'like', 'pub-services.%')
                     // Gestion de la bibliographie
                     ->orWhere('name', 'like', 'bibliography.%')
+                    // ✨ NOUVEAU : Gestion des médias - Images
+                    ->orWhere('name', 'like', 'media_images.%')
+                    // ✨ NOUVEAU : Gestion des médias - Vidéos
+                    ->orWhere('name', 'like', 'media_videos.%')
                     // Gestion des produits
                     ->orWhere('name', 'like', 'products.%')
                     // Gestion des commandes
@@ -192,9 +196,12 @@ class RoleSeeder extends Seeder
         $this->command->info('1. Super Admin: TOUTES les permissions (' . count($allPermissions) . ')');
         $this->command->info('2. Admin: Toutes sauf suppressions critiques (' . count($adminPermissions) . ')');
         $this->command->info('3. Manager: Gestion complète du contenu plateforme (' . count($managerPermissions) . ')');
-        $this->command->info('   - Inclus: Disponibilités, Événements, Rendez-vous');
+        $this->command->info('   📌 Disponibilités, Événements, Rendez-vous');
+        $this->command->info('   ✨ Médias (Images & Vidéos) - NOUVEAU');
+        $this->command->info('   📌 Réalisations, Recettes, Témoignages, Pub-Services');
+        $this->command->info('   📌 Produits, Commandes, Hôtels, Réservations, Dons, Contacts');
+        $this->command->info('   📌 Vue paiements uniquement');
         $this->command->info('4. Receptionist: Hôtels, Réservations et Rendez-vous (' . count($receptionistPermissions) . ')');
-        $this->command->info('   - Inclus: Vue disponibilités, Événements, Rendez-vous, Paiements');
         $this->command->info('5. Customer Service: Contacts uniquement (' . count($customerServicePermissions) . ')');
     }
 }

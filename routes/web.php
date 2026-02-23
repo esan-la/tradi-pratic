@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ConsultationController;
@@ -14,7 +15,7 @@ use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\PubServiceController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\HotelReservationController;
-use App\Http\Controllers\Auth\LoginController;
+
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialControll
 use App\Http\Controllers\Admin\BibliographyController as AdminBibliographyController;
 use App\Http\Controllers\Admin\PubServiceController as AdminPubServiceController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\AvailabilityPeriodController as AdminAvailabilityPeriodController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 
@@ -518,6 +520,78 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::middleware('permission:settings.view')->group(function () {
         Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
     });
+
+    // Routes admin
+    // Route::middleware(['auth', 'permission:media.manage'])->prefix('admin')->name('admin.')->group(function () {
+    //     Route::get('media', [AdminMediaController::class, 'index'])->name('media.index');
+    //     Route::get('media/create', [AdminMediaController::class, 'create'])->name('media.create');
+
+    //     // Images
+    //     Route::post('media/images', [AdminMediaController::class, 'storeImages'])->name('media.storeImages');
+    //     Route::post('media/images/{id}/toggle', [AdminMediaController::class, 'toggleImage'])->name('media.toggleImage');
+    //     Route::delete('media/images/{id}', [AdminMediaController::class, 'destroyImage'])->name('media.destroyImage');
+    //     Route::post('media/images/bulk-delete', [AdminMediaController::class, 'bulkDeleteImages'])->name('media.bulkDeleteImages');
+
+    //     // Vidéos
+    //     Route::post('media/videos', [AdminMediaController::class, 'storeVideo'])->name('media.storeVideo');
+    //     Route::post('media/videos/{id}/toggle', [AdminMediaController::class, 'toggleVideo'])->name('media.toggleVideo');
+    //     Route::delete('media/videos/{id}', [AdminMediaController::class, 'destroyVideo'])->name('media.destroyVideo');
+    //     Route::post('media/videos/bulk-delete', [AdminMediaController::class, 'bulkDeleteVideos'])->name('media.bulkDeleteVideos');
+    // });
+
+    // Index avec filtre
+    Route::middleware('permission:media_images.view')->group(function () {
+        Route::get('media', [AdminMediaController::class, 'index'])->name('media.index');
+    });
+
+    // Images
+    Route::middleware('permission:media_images.create')->group(function () {
+        Route::post('media/images', [AdminMediaController::class, 'storeImages'])->name('media.storeImages');
+    });
+
+    Route::middleware('permission:media_images.edit')->group(function () {
+        Route::post('media/images/{id}/toggle', [AdminMediaController::class, 'toggleImage'])->name('media.toggleImage');
+    });
+
+    Route::middleware('permission:media_images.delete')->group(function () {
+        Route::delete('media/images/{id}', [AdminMediaController::class, 'destroyImage'])->name('media.destroyImage');
+        Route::post('media/images/bulk-delete', [AdminMediaController::class, 'bulkDeleteImages'])->name('media.bulkDeleteImages');
+    });
+
+    // Vidéos
+    Route::middleware('permission:media_videos.create')->group(function () {
+        Route::post('media/videos', [AdminMediaController::class, 'storeVideo'])->name('media.storeVideo');
+    });
+
+    Route::middleware('permission:media_videos.edit')->group(function () {
+        Route::post('media/videos/{id}/toggle', [AdminMediaController::class, 'toggleVideo'])->name('media.toggleVideo');
+    });
+
+    Route::middleware('permission:media_videos.delete')->group(function () {
+        Route::delete('media/videos/{id}', [AdminMediaController::class, 'destroyVideo'])->name('media.destroyVideo');
+        Route::post('media/videos/bulk-delete', [AdminMediaController::class, 'bulkDeleteVideos'])->name('media.bulkDeleteVideos');
+    });
+
+    // Réseaux Sociaux
+    // Route::middleware('permission:settings.edit')->group(function () {
+    //     Route::get('social-links', [SocialLinkController::class, 'index'])->name('social-links.index');
+    //     Route::get('social-links/create', [SocialLinkController::class, 'create'])->name('social-links.create');
+    //     Route::post('social-links', [SocialLinkController::class, 'store'])->name('social-links.store');
+    //     Route::get('social-links/{socialLink}/edit', [SocialLinkController::class, 'edit'])->name('social-links.edit');
+    //     Route::put('social-links/{socialLink}', [SocialLinkController::class, 'update'])->name('social-links.update');
+    //     Route::delete('social-links/{socialLink}', [SocialLinkController::class, 'destroy'])->name('social-links.destroy');
+    //     Route::post('social-links/{socialLink}/toggle', [SocialLinkController::class, 'toggle'])->name('social-links.toggle');
+    //     Route::post('social-links/update-order', [SocialLinkController::class, 'updateOrder'])->name('social-links.update-order');
+    // });
+
+    // // Paramètres
+    // Route::middleware('permission:settings.view')->group(function () {
+    //     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    // });
+
+    // Route::middleware('permission:settings.edit')->group(function () {
+    //     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    // });
 
     // Journaux d'activité
     Route::middleware('permission:logs.view')->group(function () {

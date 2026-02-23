@@ -148,6 +148,19 @@ class PermissionSeeder extends Seeder
             ['name' => 'bibliography.view', 'description' => 'Voir la bibliographie'],
             ['name' => 'bibliography.edit', 'description' => 'Modifier la bibliographie'],
 
+            // Médias - Images (8 permissions)
+            ['name' => 'media_images.view', 'description' => 'Voir les images'],
+            ['name' => 'media_images.create', 'description' => 'Ajouter des images'],
+            ['name' => 'media_images.edit', 'description' => 'Modifier les images'],
+            ['name' => 'media_images.delete', 'description' => 'Supprimer les images'],
+
+            // Médias - Vidéos (4 permissions)
+            ['name' => 'media_videos.view', 'description' => 'Voir les vidéos'],
+            ['name' => 'media_videos.create', 'description' => 'Ajouter des vidéos'],
+            ['name' => 'media_videos.edit', 'description' => 'Modifier les vidéos'],
+            ['name' => 'media_videos.delete', 'description' => 'Supprimer les vidéos'],
+
+
             // ========================================
             // ADMINISTRATION
             // ========================================
@@ -155,6 +168,7 @@ class PermissionSeeder extends Seeder
             // Gestion des paramètres
             ['name' => 'settings.view', 'description' => 'Voir les paramètres'],
             ['name' => 'settings.edit', 'description' => 'Modifier les paramètres'],
+            ['name' => 'settings.clear-cache', 'description' => 'Vider le cache'],
 
             // Gestion des logs
             ['name' => 'logs.view', 'description' => 'Voir les journaux d\'activité'],

@@ -51,6 +51,16 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
+    public function mediaImages()
+    {
+        return $this->hasMany(MediaImage::class);
+    }
+
+    public function mediaVideos()
+    {
+        return $this->hasMany(MediaVideo::class);
+    }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);

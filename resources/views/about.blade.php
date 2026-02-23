@@ -4,7 +4,8 @@
 
 @section('content')
 <!-- Hero Section -->
-<section class="hero-section bg-dark text-white py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+{{-- <section class="hero-section bg-dark text-white py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"> --}}
+<section class="hero-section bg-success text-white py-5">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8 mx-auto text-center">

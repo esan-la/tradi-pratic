@@ -612,6 +612,15 @@
                 </a>
                 @endif
 
+                @if(Auth::user()->hasPermission('media_images.view') || Auth::user()->hasPermission('media_videos.view'))
+                    <a class="nav-link {{ request()->routeIs('admin.media*') ? 'active' : '' }}"
+                    href="{{ route('admin.media.index') }}">
+                        <i class="fas fa-photo-video"></i>
+                        <span>Médias</span>
+                        <span class="badge bg-success ms-auto">Nouveau</span>
+                    </a>
+                @endif
+
                 @if(Auth::user()->hasPermission('bibliography.view'))
                 <a class="nav-link {{ request()->routeIs('admin.bibliography.*') ? 'active' : '' }}" href="{{ route('admin.bibliography.index') }}">
                     <i class="fas fa-user-md"></i>

@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MediaImage;
+use App\Models\MediaVideo;
 use Illuminate\Http\Request;
 
 class MediaController extends Controller
 {
+    /**
+     * Display public media gallery
+     */
     public function index()
     {
-        // Configuration des liens sociaux
-        $socialLinks = [
-            'youtube' => 'https://youtube.com/@adja-amsetou',
-            'facebook' => 'https://facebook.com/adja.amsetou',
-            'tiktok' => 'https://tiktok.com/@adja.amsetou',
-            'instagram' => 'https://instagram.com/adja.amsetou',
-        ];
+        // Récupérer toutes les images et vidéos publiées
+        $images = MediaImage::published()->latest()->get();
+        $videos = MediaVideo::published()->latest()->get();
 
-        // ID de la chaîne YouTube pour l'intégration
-        $youtubeChannelId = 'YOUR_YOUTUBE_CHANNEL_ID';
-
-        return view('media', compact('socialLinks', 'youtubeChannelId'));
+        return view('media', compact('images', 'videos'));
     }
 }

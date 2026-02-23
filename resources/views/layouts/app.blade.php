@@ -43,22 +43,23 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="contact-info">
-                            <a href="tel:{{ env('WHATSAPP_NUMBER') }}" class="text-white text-decoration-none me-3">
-                                <i class="fas fa-phone"></i> {{ env('WHATSAPP_NUMBER') }}
+                            <a href="{{ contact_phone_link() }}" class="text-white text-decoration-none me-3">
+                                <i class="fas fa-phone"></i> {{ config('contact.phone') }}
                             </a>
-                            <a href="mailto:{{ env('MAIL_FROM_ADDRESS') }}" class="text-white text-decoration-none">
-                                <i class="fas fa-envelope"></i> {{ env('MAIL_FROM_ADDRESS') }}
+                            <a href="{{ contact_email_link() }}" class="text-white text-decoration-none">
+                                <i class="fas fa-envelope"></i> {{ config('contact.email') }}
                             </a>
                         </div>
                     </div>
                     <div class="col-md-6 text-end">
                         <div class="social-links">
-                            <a href="#" class="text-white me-2"><i class="fab fa-facebook"></i></a>
-                            <a href="#" class="text-white me-2"><i class="fab fa-youtube"></i></a>
-                            <a href="#" class="text-white me-2"><i class="fab fa-tiktok"></i></a>
-                            <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
+                            <a href="{{ config('contact.social.facebook') }}" class="text-white me-2"><i class="fab fa-facebook"></i></a>
+                            <a href="{{ config('contact.social.youtube') }}" class="text-white me-2"><i class="fab fa-youtube"></i></a>
+                            <a href="{{ config('contact.social.tiktok') }}" class="text-white me-2"><i class="fab fa-tiktok"></i></a>
+                            <a href="{{ config('contact.social.instagram') }}" class="text-white"><i class="fab fa-instagram"></i></a>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -178,10 +179,10 @@
                     <h5 class="text-success mb-3">Adja Amsetou</h5>
                     <p>Tradi-praticienne reconnue à Komsilga, spécialisée dans les consultations traditionnelles, les prières et les soins naturels.</p>
                     <div class="social-links mt-3">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-youtube fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-tiktok fa-lg"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="{{ config('contact.social.facebook') }}" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="{{ config('contact.social.youtube') }}" class="text-white me-3"><i class="fab fa-youtube fa-lg"></i></a>
+                        <a href="{{ config('contact.social.tiktok') }}" class="text-white me-3"><i class="fab fa-tiktok fa-lg"></i></a>
+                        <a href="{{ config('contact.social.instagram') }}" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4 mb-4">
@@ -223,20 +224,20 @@
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-phone text-success"></i>
-                            <a href="tel:{{ env('WHATSAPP_NUMBER') }}" class="text-white text-decoration-none">
-                                {{ env('WHATSAPP_NUMBER') }}
+                            <a href="{{ contact_phone_link() }}" class="text-white text-decoration-none">
+                                Appelez
                             </a>
                         </li>
                         <li class="mb-2">
                             <i class="fab fa-whatsapp text-success"></i>
-                            <a href="https://wa.me/{{ str_replace('+', '', env('WHATSAPP_NUMBER')) }}" class="text-white text-decoration-none">
+                            <a href="{{ contact_whatsapp_link() }}" class="text-white text-decoration-none">
                                 WhatsApp
                             </a>
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-envelope text-success"></i>
-                            <a href="mailto:{{ env('MAIL_FROM_ADDRESS') }}" class="text-white text-decoration-none">
-                                {{ env('MAIL_FROM_ADDRESS') }}
+                            <a href="mailto:{{ contact_email_link() }}" class="text-white text-decoration-none">
+                                E-mail
                             </a>
                         </li>
                     </ul>
@@ -256,7 +257,7 @@
     </footer>
 
     <!-- WhatsApp Floating Button -->
-    <a href="https://wa.me/{{ str_replace('+', '', env('WHATSAPP_NUMBER')) }}" class="whatsapp-float" target="_blank">
+    <a href="{{ contact_whatsapp_link() }}" class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp"></i>
     </a>
 

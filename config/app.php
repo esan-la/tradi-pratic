@@ -185,4 +185,11 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    // 'social' => [
+    //     'facebook' => env('FACEBOOK_URL'),
+    //     'twitter' => env('TWITTER_URL'),
+    //     'linkedin' => env('LINKEDIN_URL'),
+    //     'youtube' => env('YOUTUBE_URL'),
+    // ],
+
 ];

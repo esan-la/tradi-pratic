@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             AvailabilityperiodSeeder::class,
             EventSeeder::class,
             AppointmentSeeder::class,
+            MediaVideoSeeder::class,
+            MediaImageSeeder::class,
         ]);
         $this->command->newLine();
         $this->command->info('✅ Seeding terminé avec succès!');

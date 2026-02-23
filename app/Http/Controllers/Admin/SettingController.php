@@ -82,4 +82,32 @@ class SettingController extends Controller
             'setting' => $setting,
         ]);
     }
+
+
+    // public function index()
+    // {
+    //     $groups = [
+    //         'general' => 'Général',
+    //         'contact' => 'Contact',
+    //         'seo' => 'SEO',
+    //         'appearance' => 'Apparence',
+    //         'social' => 'Réseaux Sociaux',
+    //         'email' => 'Email',
+    //     ];
+
+    //     $settings = Setting::all()->groupBy('group');
+
+    //     return view('admin.settings.index', compact('settings', 'groups'));
+    // }
+
+    // public function update(Request $request)
+    // {
+    //     $settings = $request->except('_token', '_method');
+
+    //     foreach ($settings as $key => $value) {
+    //         Setting::set($key, $value ?? '');
+    //     }
+
+    //     return back()->with('success', 'Paramètres mis à jour avec succès.');
+    // }
 }
