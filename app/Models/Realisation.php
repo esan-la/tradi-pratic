@@ -2,38 +2,41 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Realisation extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'title',
         'slug',
+        'short_description',
         'description',
         'category',
-        'image',        // Image principale (singulier)
-        'gallery',      // Galerie d'images (array)
+        'image',
+        'gallery',
         'video_url',
         'is_featured',
         'is_published',
         'order',
+        'views',
     ];
 
     protected $casts = [
-        'gallery' => 'array',      // Changé de 'images' à 'gallery'
+        'gallery' => 'array',
         'is_featured' => 'boolean',
         'is_published' => 'boolean',
-        'order' => 'integer',
+        'views' => 'integer',
     ];
 
+    /**
+     * Boot du modèle
+     */
     protected static function boot()
     {
         parent::boot();
 
+        // Auto-génération du slug
         static::creating(function ($realisation) {
             if (empty($realisation->slug)) {
                 $realisation->slug = Str::slug($realisation->title);
@@ -41,11 +44,76 @@ class Realisation extends Model
         });
 
         static::updating(function ($realisation) {
-            // Mettre à jour le slug si le titre change
             if ($realisation->isDirty('title')) {
                 $realisation->slug = Str::slug($realisation->title);
             }
         });
+    }
+
+    /**
+     * URL de l'image principale
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return asset('images/placeholder-realisation.jpg');
+    }
+
+    /**
+     * URLs de la galerie
+     */
+    public function getGalleryUrlsAttribute()
+    {
+        if (!$this->gallery || !is_array($this->gallery)) {
+            return [];
+        }
+
+        return array_map(function($path) {
+            return asset('storage/' . $path);
+        }, $this->gallery);
+    }
+
+    /**
+     * Vérifier si la galerie existe
+     */
+    public function hasGallery()
+    {
+        return !empty($this->gallery) && is_array($this->gallery) && count($this->gallery) > 0;
+    }
+
+    /**
+     * Nombre d'images dans la galerie
+     */
+    public function getGalleryCountAttribute()
+    {
+        return $this->hasGallery() ? count($this->gallery) : 0;
+    }
+
+    /**
+     * Temps de lecture estimé (en minutes)
+     */
+    public function getReadingTimeAttribute()
+    {
+        $wordCount = str_word_count(strip_tags($this->description));
+        return ceil($wordCount / 200); // 200 mots par minute
+    }
+
+    /**
+     * Description nettoyée (sans HTML)
+     */
+    public function getPlainDescriptionAttribute()
+    {
+        return strip_tags($this->description);
+    }
+
+    /**
+     * Extrait de la description
+     */
+    public function getExcerptAttribute()
+    {
+        return Str::limit($this->plain_description, 150);
     }
 
     /**
@@ -65,81 +133,30 @@ class Realisation extends Model
     }
 
     /**
-     * Scope pour filtrer par catégorie
+     * Scope par catégorie
      */
-    public function scopeByCategory($query, $category)
+    public function scopeCategory($query, $category)
     {
         return $query->where('category', $category);
     }
 
     /**
-     * Scope pour trier par ordre personnalisé
+     * Scope recherche
      */
-    public function scopeOrdered($query)
+    public function scopeSearch($query, $search)
     {
-        return $query->orderBy('order')->orderBy('created_at', 'desc');
+        return $query->where(function($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('short_description', 'like', "%{$search}%");
+        });
     }
 
     /**
-     * Obtenir le nom de la catégorie formaté
+     * Incrémenter les vues
      */
-    public function getCategoryNameAttribute()
+    public function incrementViews()
     {
-        return match($this->category) {
-            'Agriculture' => 'Agriculture',
-            'Élevage' => 'Élevage',
-            'Artisanat' => 'Artisanat',
-            'Autres' => 'Autres',
-            default => $this->category,
-        };
-    }
-
-    /**
-     * Obtenir l'URL complète de l'image principale
-     */
-    public function getImageUrlAttribute()
-    {
-        return $this->image ? asset('storage/' . $this->image) : null;
-    }
-
-    /**
-     * Obtenir les URLs complètes de la galerie
-     */
-    public function getGalleryUrlsAttribute()
-    {
-        if (!$this->gallery || !is_array($this->gallery)) {
-            return [];
-        }
-
-        return array_map(function($image) {
-            return asset('storage/' . $image);
-        }, $this->gallery);
-    }
-
-    /**
-     * Obtenir la première image de la galerie
-     */
-    public function getFirstGalleryImageAttribute()
-    {
-        if ($this->gallery && is_array($this->gallery) && count($this->gallery) > 0) {
-            return asset('storage/' . $this->gallery[0]);
-        }
-        return null;
-    }
-
-    /**
-     * Vérifier si la réalisation a une galerie
-     */
-    public function hasGallery()
-    {
-        return $this->gallery && is_array($this->gallery) && count($this->gallery) > 0;
-    }
-
-    /**
-     * Obtenir le nombre d'images dans la galerie
-     */
-    public function getGalleryCountAttribute()
-    {
-        return $this->gallery ? count($this->gallery) : 0;
+        $this->increment('views');
     }
 }

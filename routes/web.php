@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ConsultationController;
@@ -15,6 +18,7 @@ use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\PubServiceController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\HotelReservationController;
+use App\Http\Controllers\LiveController;
 
 
 // Admin Controllers
@@ -34,14 +38,16 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
-use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\BibliographyController as AdminBibliographyController;
 use App\Http\Controllers\Admin\PubServiceController as AdminPubServiceController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
+use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Admin\AvailabilityPeriodController as AdminAvailabilityPeriodController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\LiveStreamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,12 +65,42 @@ Route::post('/consultations', [ConsultationController::class, 'store'])->name('c
 Route::post('/consultations/check-availability', [ConsultationController::class, 'checkAvailability'])->name('consultations.check-availability');
 
 // Réalisations
-Route::get('/realisations', [RealisationController::class, 'index'])->name('realisations');
-Route::get('/realisations/{slug}', [RealisationController::class, 'show'])->name('realisations.show');
+// Route::get('/realisations', [RealisationController::class, 'index'])->name('realisations');
+// Route::get('/realisations/{slug}', [RealisationController::class, 'show'])->name('realisations.show');
+// Route::get('/search', [RealisationController::class, 'search'])->name('search');
+// Route::get('/category/{category}', [RealisationController::class, 'category'])->name('category');
+
+Route::prefix('realisations')->name('realisations.')->group(function () {
+
+    // Liste
+    Route::get('/', [RealisationController::class, 'index'])
+        ->name('index');
+
+    // Recherche AJAX
+    Route::get('/search', [RealisationController::class, 'search'])
+        ->name('search');
+
+    // Catégorie
+    Route::get('/category/{category}', [RealisationController::class, 'category'])
+        ->name('category');
+
+    // Détail (TOUJOURS EN DERNIER)
+    Route::get('/{slug}', [RealisationController::class, 'show'])
+        ->name('show');
+});
 
 // Recettes
-Route::get('/recettes', [RecipeController::class, 'index'])->name('recipes');
-Route::get('/recettes/{slug}', [RecipeController::class, 'show'])->name('recipes.show');
+// Route::get('/recettes', [RecipeController::class, 'index'])->name('recipes');
+// Route::get('/recettes/{slug}', [RecipeController::class, 'show'])->name('recipes.show');
+
+// routes/web.php
+Route::prefix('recipes')->name('recipes.')->group(function () {
+    Route::get('/', [RecipeController::class, 'index'])->name('index');
+    Route::get('/search', [RecipeController::class, 'search'])->name('search');
+    Route::get('/category/{category}', [RecipeController::class, 'category'])->name('category');
+    Route::get('/{slug}/print', [RecipeController::class, 'print'])->name('print');
+    Route::get('/{slug}', [RecipeController::class, 'show'])->name('show'); // EN DERNIER
+});
 
 // Médias
 Route::get('/medias', [MediaController::class, 'index'])->name('media');
@@ -91,6 +127,10 @@ Route::get('hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.sho
 Route::get('hotel-reservations/create', [HotelReservationController::class, 'create'])->name('hotel-reservations.create');
 Route::post('hotel-reservations', [HotelReservationController::class, 'store'])->name('hotel-reservations.store');
 
+// ===== ROUTES PUBLIQUES LIVE =====
+Route::get('/live', [LiveController::class, 'index'])->name('live');
+Route::get('/live/{liveStream}', [LiveController::class, 'show'])->name('live.show');
+
 /*
 |--------------------------------------------------------------------------
 | ROUTES D'AUTHENTIFICATION
@@ -98,14 +138,40 @@ Route::post('hotel-reservations', [HotelReservationController::class, 'store'])-
 */
 
 // Routes pour les utilisateurs non connectés (guest)
+// Route::middleware('guest')->group(function () {
+//     Route::get('login', [LoginController::class, 'create'])->name('login');
+//     Route::post('login', [LoginController::class, 'store']);
+// });
+
+
+
+// ===== AUTHENTIFICATION =====
 Route::middleware('guest')->group(function () {
-    Route::get('login', [LoginController::class, 'create'])->name('login');
-    Route::post('login', [LoginController::class, 'store']);
+    // Connexion
+    Route::get('/connexion', [LoginController::class, 'showLoginForm'])->name('auth.login');
+    Route::post('/connexion', [LoginController::class, 'login'])->name('login.submit');
+
+    // Mot de passe oublié
+    Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('auth.password.request');
+    Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('auth.password.email');
+
+    // Réinitialisation du mot de passe
+    Route::get('/reinitialiser-mot-de-passe/{token}', [ResetPasswordController::class, 'showResetForm'])->name('auth.password.reset');
+    Route::post('/reinitialiser-mot-de-passe', [ResetPasswordController::class, 'reset'])->name('auth.password.update');
 });
 
 // Routes pour les utilisateurs connectés
 Route::middleware('auth')->group(function () {
-    Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+    // Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+    // Déconnexion
+    Route::post('/deconnexion', [LoginController::class, 'logout'])->name('auth.logout');
+
+    // Profil
+    Route::get('/profil', [ProfileController::class, 'show'])->name('auth.profile.show');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('auth.profile.update');
+    Route::put('/profil/avatar', [ProfileController::class, 'updateAvatar'])->name('auth.profile.avatar');
+    Route::delete('/profil/avatar', [ProfileController::class, 'deleteAvatar'])->name('auth.profile.avatar.delete');
+    Route::put('/profil/mot-de-passe', [ProfileController::class, 'updatePassword'])->name('auth.profile.password');
 });
 
 /*
@@ -116,15 +182,19 @@ Route::middleware('auth')->group(function () {
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
 
+    // Upload d'image pour TinyMCE
+    Route::post('admin/upload/image', [AdminUploadController::class, 'uploadImage'])
+        ->name('upload.image');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
     Route::get('/chart-data', [DashboardController::class, 'getChartData'])->name('chart-data');
 
     // Profil utilisateur
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::get('/profile', [AdminProfileController::class, 'edit'])->name('admin.profile');
+    Route::put('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+    Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 
     /*
     |--------------------------------------------------------------------------
@@ -309,7 +379,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('recipes', AdminRecipeController::class);
+    // Route::resource('recipes', AdminRecipeController::class);
+    // routes/web.php
+    Route::middleware('permission:recipes.create')->group(function () {
+        Route::get('recipes/create', [AdminRecipeController::class, 'create'])->name('recipes.create');
+        Route::post('recipes', [AdminRecipeController::class, 'store'])->name('recipes.store');
+    });
+
+    Route::middleware('permission:recipes.view')->group(function () {
+        Route::get('recipes', [AdminRecipeController::class, 'index'])->name('recipes.index');
+        Route::get('recipes/{recipe}', [AdminRecipeController::class, 'show'])->name('recipes.show');
+    });
+
+    Route::middleware('permission:recipes.edit')->group(function () {
+        Route::get('recipes/{recipe}/edit', [AdminRecipeController::class, 'edit'])->name('recipes.edit');
+        Route::put('recipes/{recipe}', [AdminRecipeController::class, 'update'])->name('recipes.update');
+        Route::post('recipes/{recipe}/toggle', [AdminRecipeController::class, 'togglePublish'])->name('recipes.toggle');
+        Route::post('recipes/{recipe}/toggle-featured', [AdminRecipeController::class, 'toggleFeatured'])->name('recipes.toggleFeatured');
+    });
+
+    Route::middleware('permission:recipes.delete')->group(function () {
+        Route::delete('recipes/{recipe}', [AdminRecipeController::class, 'destroy'])->name('recipes.destroy');
+        Route::post('recipes/bulk-delete', [AdminRecipeController::class, 'bulkDelete'])->name('recipes.bulkDelete');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -317,8 +409,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('realisations', AdminRealisationController::class);
+    // Route::resource('realisations', AdminRealisationController::class);
+    Route::middleware('permission:realisations.create')->group(function () {
+        Route::get('realisations/create', [AdminRealisationController::class, 'create'])->name('realisations.create');
+        Route::post('realisations', [AdminRealisationController::class, 'store'])->name('realisations.store');
+    });
 
+    Route::middleware('permission:realisations.view')->group(function () {
+        Route::get('realisations', [AdminRealisationController::class, 'index'])->name('realisations.index');
+        Route::get('realisations/{realisation}', [AdminRealisationController::class, 'show'])->name('realisations.show');
+    });
+    Route::middleware('permission:realisations.edit')->group(function () {
+        Route::get('realisations/{realisation}/edit', [AdminRealisationController::class, 'edit'])->name('realisations.edit');
+        Route::put('realisations/{realisation}', [AdminRealisationController::class, 'update'])->name('realisations.update');
+        Route::post('realisations/{realisation}/toggle', [AdminRealisationController::class, 'togglePublish'])->name('realisations.toggle');
+        Route::post('realisations/{realisation}/toggle-featured', [AdminRealisationController::class, 'toggleFeatured'])->name('realisations.toggleFeatured');
+        Route::post('realisations/reorder', [AdminRealisationController::class, 'reorder'])->name('realisations.reorder');
+    });
+
+    Route::middleware('permission:realisations.delete')->group(function () {
+        Route::delete('realisations/{realisation}', [AdminRealisationController::class, 'destroy'])->name('realisations.destroy');
+        Route::post('realisations/bulk-delete', [AdminRealisationController::class, 'bulkDelete'])->name('realisations.bulkDelete');
+    });
     /*
     |--------------------------------------------------------------------------
     | TÉMOIGNAGES
@@ -464,6 +576,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('pub-services', [AdminPubServiceController::class, 'index'])->name('pub-services.index');
         Route::get('pub-services/{pubService}', [AdminPubServiceController::class, 'show'])->name('pub-services.show');
     });
+
+    // ===== ROUTES ADMIN LIVE STREAMS =====
+    Route::resource('live-streams', LiveStreamController::class);
+    Route::patch('live-streams/{liveStream}/go-live', [LiveStreamController::class, 'goLive'])->name('live-streams.go-live');
+    Route::patch('live-streams/{liveStream}/end', [LiveStreamController::class, 'endStream'])->name('live-streams.end');
+    Route::patch('live-streams/{liveStream}/cancel', [LiveStreamController::class, 'cancel'])->name('live-streams.cancel');
 
     /*
     |--------------------------------------------------------------------------

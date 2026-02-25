@@ -12,23 +12,41 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('description');
-            $table->json('ingredients');           // JSON array
-            $table->json('instructions');          // JSON array
-            $table->integer('prep_time')->nullable();     // En minutes
-            $table->integer('cook_time')->nullable();     // En minutes
-            $table->integer('servings')->nullable();
+
+            // Descriptions (CMS)
+            $table->text('short_description')->nullable(); // Résumé court
+            $table->longText('description'); // Description HTML via CMS
+
+            // Données de la recette
+            $table->json('ingredients'); // ["Ingrédient 1", "Ingrédient 2"]
+            $table->json('instructions'); // ["Étape 1", "Étape 2"]
+
+            // Temps et portions
+            $table->integer('prep_time')->nullable(); // Minutes
+            $table->integer('cook_time')->nullable(); // Minutes
+            $table->integer('servings')->nullable(); // Nombre de personnes
+
+            // Catégorie et médias
             $table->string('category')->nullable();
-            $table->string('image')->nullable();          // Changé de featured_image
-            $table->string('video_url')->nullable();      // URL complète YouTube
+            $table->string('difficulty')->nullable(); // Facile, Moyen, Difficile
+            $table->string('image')->nullable(); // Image principale
+            $table->json('gallery')->nullable(); // Galerie photos
+            $table->string('video_url')->nullable(); // YouTube/Vimeo
+
+            // Statuts
             $table->boolean('is_published')->default(true);
-            $table->integer('views_count')->default(0);
+            $table->boolean('is_featured')->default(false);
+
+            // Compteurs
+            $table->unsignedInteger('views')->default(0);
+
             $table->timestamps();
 
-            // Index pour améliorer les performances
+            // Index
             $table->index('slug');
             $table->index(['is_published', 'created_at']);
-            $table->index('views_count');
+            $table->index('category');
+            $table->index('views');
         });
     }
 

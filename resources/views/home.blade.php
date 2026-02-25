@@ -38,7 +38,7 @@
                     <div class="container">
                         <h2 class="display-4 fw-bold mb-3">Traditions & Culture</h2>
                         <p class="lead mb-4">Recettes authentiques et savoir-faire ancestral</p>
-                        <a href="{{ route('recipes') }}" class="btn btn-success btn-lg">Voir les Recettes</a>
+                        <a href="{{ route('recipes.index') }}" class="btn btn-success btn-lg">Voir les Recettes</a>
                     </div>
                 </div>
             </div>
@@ -165,11 +165,17 @@
                 <div class="realisation-card h-100">
                     <div class="realisation-image">
                         @if($realisation->image)
-                            <img src="{{ asset('storage/' . $realisation->image) }}"
+                            {{-- <img src="{{ asset('storage/' . $realisation->image) }}"
                                  alt="{{ $realisation->title }}"
                                  class="img-fluid realisation-img"
                                  onerror="this.src='{{ asset('images/placeholder.jpg') }}'"
-                                 loading="lazy">
+                                 loading="lazy"> --}}
+                            <img src="{{ asset('storage/' . $realisation->image) }}"
+                                class="card-img-top w-100 h-100"
+                                alt="{{ $realisation->title }}"
+                                style="object-fit: cover; transition: transform 0.3s ease;"
+                                onerror="this.src='{{ asset('images/placeholder.jpg') }}'"
+                                loading="lazy">
                         @elseif($realisation->gallery && is_array($realisation->gallery) && count($realisation->gallery) > 0)
                             <img src="{{ asset('storage/' . $realisation->gallery[0]) }}"
                                  alt="{{ $realisation->title }}"
@@ -204,7 +210,7 @@
         </div>
         @if($featuredRealisations->count() > 0)
         <div class="text-center mt-4">
-            <a href="{{ route('realisations') }}" class="btn btn-success">Voir toutes les réalisations</a>
+            <a href="{{ route('realisations.index') }}" class="btn btn-success">Voir toutes les réalisations</a>
         </div>
         @endif
     </div>

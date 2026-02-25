@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // config/services.php — Ajouter la section youtube
+
+    'youtube' => [
+        'channel_id'   => env('YOUTUBE_CHANNEL_ID', ''),
+        'channel_name' => env('YOUTUBE_CHANNEL_NAME', 'TradiPratic'),
+        'channel_url'  => env('YOUTUBE_CHANNEL_URL', 'https://www.youtube.com/@TradiPratic'),
+        'subscribe_url'=> env('YOUTUBE_SUBSCRIBE_URL', 'https://www.youtube.com/@TradiPratic?sub_confirmation=1'),
+    ],
+
 ];

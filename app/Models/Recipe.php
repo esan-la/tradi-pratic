@@ -2,44 +2,51 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Recipe extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'title',
         'slug',
+        'short_description',
         'description',
-        'ingredients',      // JSON array
-        'instructions',     // JSON array
-        'prep_time',        // Changé de preparation_time
-        'cook_time',        // Changé de cooking_time
-        'servings',
         'category',
-        'image',            // Changé de featured_image
-        'video_url',        // Changé de youtube_video_id (URL complète)
+        'difficulty',
+        'prep_time',
+        'cook_time',
+        'servings',
+        'ingredients',
+        'instructions',
+        'image',
+        'gallery',
+        'video_url',
         'is_published',
-        'views_count',
+        'is_featured',
+        'views',
     ];
 
     protected $casts = [
-        'ingredients' => 'array',      // ✅ Cast en array
-        'instructions' => 'array',     // ✅ Cast en array
+        'ingredients' => 'array',
+        'instructions' => 'array',
+        'gallery' => 'array',
+        'is_published' => 'boolean',
+        'is_featured' => 'boolean',
+        'views' => 'integer',
         'prep_time' => 'integer',
         'cook_time' => 'integer',
         'servings' => 'integer',
-        'is_published' => 'boolean',
-        'views_count' => 'integer',
     ];
 
+    /**
+     * Boot du modèle
+     */
     protected static function boot()
     {
         parent::boot();
 
+        // Auto-génération du slug
         static::creating(function ($recipe) {
             if (empty($recipe->slug)) {
                 $recipe->slug = Str::slug($recipe->title);
@@ -47,11 +54,114 @@ class Recipe extends Model
         });
 
         static::updating(function ($recipe) {
-            // Mettre à jour le slug si le titre change
             if ($recipe->isDirty('title')) {
                 $recipe->slug = Str::slug($recipe->title);
             }
         });
+    }
+
+    /**
+     * URL de l'image principale
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return asset('images/placeholder-recipe.jpg');
+    }
+
+    /**
+     * URLs de la galerie
+     */
+    public function getGalleryUrlsAttribute()
+    {
+        if (!$this->gallery || !is_array($this->gallery)) {
+            return [];
+        }
+
+        return array_map(function($path) {
+            return asset('storage/' . $path);
+        }, $this->gallery);
+    }
+
+    /**
+     * Vérifier si la galerie existe
+     */
+    public function hasGallery()
+    {
+        return !empty($this->gallery) && is_array($this->gallery) && count($this->gallery) > 0;
+    }
+
+    /**
+     * Nombre d'images dans la galerie
+     */
+    public function getGalleryCountAttribute()
+    {
+        return $this->hasGallery() ? count($this->gallery) : 0;
+    }
+
+    /**
+     * Temps total de préparation (prep + cook)
+     */
+    public function getTotalTimeAttribute()
+    {
+        return ($this->prep_time ?? 0) + ($this->cook_time ?? 0);
+    }
+
+    /**
+     * Badge couleur pour la difficulté
+     */
+    public function getDifficultyBadgeColorAttribute()
+    {
+        return match($this->difficulty) {
+            'Facile' => 'success',
+            'Moyen' => 'warning',
+            'Difficile' => 'danger',
+            default => 'secondary'
+        };
+    }
+
+    /**
+     * Nombre d'ingrédients
+     */
+    public function getIngredientsCountAttribute()
+    {
+        return is_array($this->ingredients) ? count($this->ingredients) : 0;
+    }
+
+    /**
+     * Nombre d'instructions
+     */
+    public function getInstructionsCountAttribute()
+    {
+        return is_array($this->instructions) ? count($this->instructions) : 0;
+    }
+
+    /**
+     * Description nettoyée (sans HTML)
+     */
+    public function getPlainDescriptionAttribute()
+    {
+        return strip_tags($this->description);
+    }
+
+    /**
+     * Extrait de la description
+     */
+    public function getExcerptAttribute()
+    {
+        $text = $this->short_description ?? $this->plain_description;
+        return Str::limit($text, 150);
+    }
+
+    /**
+     * Temps de lecture estimé (en minutes)
+     */
+    public function getReadingTimeAttribute()
+    {
+        $wordCount = str_word_count($this->plain_description);
+        return max(1, ceil($wordCount / 200)); // 200 mots par minute
     }
 
     /**
@@ -62,64 +172,62 @@ class Recipe extends Model
         return $query->where('is_published', true);
     }
 
-     /**
-     * Scope pour filtrer par catégorie
+    /**
+     * Scope pour les recettes en vedette
      */
-    public function scopeByCategory($query, $category)
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    /**
+     * Scope par catégorie
+     */
+    public function scopeCategory($query, $category)
     {
         return $query->where('category', $category);
     }
 
     /**
-     * Scope pour les recettes populaires
+     * Scope par difficulté
      */
-    public function scopePopular($query, $limit = 6)
+    public function scopeDifficulty($query, $difficulty)
     {
-        return $query->orderBy('views_count', 'desc')->limit($limit);
+        return $query->where('difficulty', $difficulty);
     }
 
     /**
-     * Obtenir le nom de la catégorie formaté
+     * Scope recherche
      */
-    public function getCategoryNameAttribute()
+    public function scopeSearch($query, $search)
     {
-        return match($this->category) {
-            'Plats' => 'Plats',
-            'Boissons' => 'Boissons',
-            'Desserts' => 'Desserts',
-            'Remèdes' => 'Remèdes',
-            default => $this->category,
-        };
+        return $query->where(function($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('short_description', 'like', "%{$search}%");
+        });
     }
 
     /**
-     * Incrémenter le compteur de vues
+     * Scope par temps maximum
+     */
+    public function scopeMaxTime($query, $maxMinutes)
+    {
+        return $query->whereRaw('(COALESCE(prep_time, 0) + COALESCE(cook_time, 0)) <= ?', [$maxMinutes]);
+    }
+
+    /**
+     * Incrémenter les vues
      */
     public function incrementViews()
     {
-        $this->increment('views_count');
+        $this->increment('views');
     }
 
     /**
-     * Obtenir l'URL de l'image
+     * Formater le temps pour affichage
      */
-    public function getImageUrlAttribute()
-    {
-        return $this->image ? asset('storage/' . $this->image) : null;
-    }
-
-    /**
-     * Obtenir le temps total (préparation + cuisson)
-     */
-    public function getTotalTimeAttribute()
-    {
-        return ($this->prep_time ?? 0) + ($this->cook_time ?? 0);
-    }
-
-    /**
-     * Obtenir le temps total formaté
-     */
-    public function getTotalTimeFormattedAttribute()
+    public function getFormattedTimeAttribute()
     {
         $total = $this->total_time;
 
@@ -130,84 +238,10 @@ class Recipe extends Model
         $hours = floor($total / 60);
         $minutes = $total % 60;
 
-        return $hours . 'h' . ($minutes > 0 ? ' ' . $minutes . 'min' : '');
-    }
-
-    /**
-     * Obtenir l'URL d'embed YouTube
-     */
-    public function getYoutubeEmbedUrlAttribute()
-    {
-        if (!$this->video_url) {
-            return null;
+        if ($minutes > 0) {
+            return $hours . 'h' . $minutes . 'min';
         }
 
-        // Si c'est déjà une URL embed
-        if (strpos($this->video_url, 'embed') !== false) {
-            return $this->video_url;
-        }
-
-        // Convertir différents formats d'URL YouTube
-        $patterns = [
-            '/youtube\.com\/watch\?v=([^&]+)/',
-            '/youtu\.be\/([^?]+)/',
-            '/youtube\.com\/embed\/([^?]+)/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $this->video_url, $matches)) {
-                return "https://www.youtube.com/embed/{$matches[1]}";
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Obtenir l'ID de la vidéo YouTube
-     */
-    public function getYoutubeVideoIdAttribute()
-    {
-        if (!$this->video_url) {
-            return null;
-        }
-
-        $patterns = [
-            '/youtube\.com\/watch\?v=([^&]+)/',
-            '/youtu\.be\/([^?]+)/',
-            '/youtube\.com\/embed\/([^?]+)/',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $this->video_url, $matches)) {
-                return $matches[1];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Vérifier si la recette a une vidéo
-     */
-    public function hasVideo()
-    {
-        return !empty($this->video_url);
-    }
-
-    /**
-     * Obtenir le nombre d'ingrédients
-     */
-    public function getIngredientsCountAttribute()
-    {
-        return $this->ingredients ? count($this->ingredients) : 0;
-    }
-
-    /**
-     * Obtenir le nombre d'étapes
-     */
-    public function getInstructionsCountAttribute()
-    {
-        return $this->instructions ? count($this->instructions) : 0;
+        return $hours . 'h';
     }
 }

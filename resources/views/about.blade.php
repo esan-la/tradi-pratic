@@ -19,29 +19,81 @@
 <!-- Main Content -->
 <section class="py-5">
     <div class="container">
-        <div class="row align-items-center mb-5">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <img src="{{ asset('images/image1.jpg') }}"
-                     class="img-fluid rounded shadow"
-                     alt="Adja Amsetou">
-            </div>
-            <div class="col-lg-6">
-                <h2 class="mb-4">Qui est Adja Amsetou ?</h2>
-                <p class="lead text-muted mb-4">
-                    Tradi-praticienne expérimentée basée à Komsilga, Burkina Faso
-                </p>
-                <p>
-                    Adja Amsetou est une tradi-praticienne reconnue qui exerce depuis plus de 20 ans.
-                    Forte d'une connaissance approfondie de la médecine traditionnelle africaine,
-                    elle met son expertise au service de tous ceux qui recherchent des solutions
-                    naturelles et authentiques pour leur bien-être.
-                </p>
-                <p>
-                    Spécialisée dans les consultations traditionnelles, les prières et les remèdes
-                    naturels, Adja Amsetou accompagne chaque personne avec bienveillance et professionnalisme.
-                </p>
-            </div>
-        </div>
+
+        <div class="mb-5">
+
+        <!-- Image fixée en haut à gauche -->
+        <img src="{{ asset('images/image1.jpg') }}"
+            class="img-fluid rounded shadow float-lg-start me-lg-4 mb-3"
+            style="max-width: 380px;"
+            alt="Adja Amsetou, guérisseuse traditionnelle à Komsilga">
+
+        <h2 class="mb-4">Qui est Adja Amsetou de Komsilga ?</h2>
+
+        <p class="lead text-muted mb-4">
+            Guérisseuse traditionnelle basée à Komsilga, Burkina Faso
+        </p>
+
+        <p>
+            Installée à Komsilga, au Burkina Faso, Adja Amsetou est reconnue comme une
+            guérisseuse traditionnelle dotée de puissances spirituelles remarquables.
+            Figure respectée dans son milieu, elle s’inscrit dans la longue tradition
+            africaine de la médecine ancestrale, où les savoirs mystiques, les pratiques
+            thérapeutiques naturelles et la guidance spirituelle se conjuguent au service
+            du bien-être de la personne.
+        </p>
+
+        <p>
+            Depuis 2019, Adja Amsetou accompagne des personnes venues de divers horizons,
+            à la recherche de solutions face à des problèmes de santé, des blocages
+            spirituels, des difficultés conjugales ou encore des situations
+            professionnelles complexes. Selon les témoignages de ses consultants,
+            son approche repose avant tout sur une écoute attentive, une consultation
+            spirituelle approfondie et l’utilisation de rituels et de remèdes issus
+            des traditions locales.
+        </p>
+
+        <h5 class="mt-4 mb-3">Une approche enracinée dans la tradition</h5>
+
+        <p>
+            Le travail d’Adja Amsetou s’appuie sur les fondements de la tradition
+            ouest-africaine, transmise de génération en génération. Son savoir-faire
+            repose notamment sur :
+        </p>
+
+        <ul>
+            <li>
+                Les savoirs ancestraux transmis au fil des générations
+            </li>
+            <li>
+                L’usage de plantes médicinales et de préparations traditionnelles
+            </li>
+            <li>
+                Des pratiques spirituelles destinées à rétablir l’équilibre entre
+                l’individu et son environnement
+            </li>
+        </ul>
+
+        <p>
+            Dans la tradition ouest-africaine, la guérison ne se limite pas uniquement
+            au corps. Elle englobe également l’âme, l’esprit et les relations sociales.
+            Adja Amsetou adopte pleinement cette vision holistique, considérant que de
+            nombreux maux trouvent leur origine dans des déséquilibres invisibles
+            nécessitant une prise en charge globale.
+        </p>
+
+        <h5 class="mt-4 mb-3">Une écoute et un accompagnement personnalisés</h5>
+
+        <p>
+            Chaque consultation est conçue comme un moment privilégié d’échange et
+            de confidentialité. Les personnes qui la consultent évoquent sa discrétion,
+            sa disponibilité et son engagement constant à rechercher des solutions
+            adaptées à chaque situation, dans le respect des traditions et des valeurs
+            humaines.
+        </p>
+
+        <div class="clearfix"></div>
+    </div>
 
         <!-- Services -->
         <div class="row mb-5">

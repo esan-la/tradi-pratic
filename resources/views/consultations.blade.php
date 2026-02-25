@@ -383,7 +383,8 @@
                         Hébergement
                     </h5>
                     <p class="mb-3">Venez de loin ? Réservez votre chambre d'hôtel !</p>
-                    <a href="{{ route('hotels.index') }}" class="btn btn-light w-100">
+                    {{-- <a href="{{ route('hotels.index') }}" class="btn btn-light w-100"> --}}
+                    <a href="#" class="btn btn-light w-100">
                         <i class="fas fa-bed"></i> Réserver un Hôtel
                     </a>
                 </div>
@@ -401,20 +402,23 @@
 
                     <!-- Map -->
                     <div class="ratio ratio-16x9 mb-3">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15669.123456789!2d-1.5283333!3d12.3683333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDIyJzA2LjAiTiAxwrAzMSc0Mi4wIlc!5e0!3m2!1sfr!2sbf!4v1234567890"
-                                style="border:0; border-radius: 8px;"
-                                allowfullscreen=""
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade">
+                        <iframe
+                            src="https://www.google.com/maps?q=12.077072,-1.700181&z=15&output=embed"
+                            style="border:0; border-radius: 8px;"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
                         </iframe>
                     </div>
 
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=12.3683333,-1.5283333"
-                       target="_blank"
-                       class="btn btn-outline-success w-100">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=12.077072,-1.700181"
+                    target="_blank"
+                    class="btn btn-outline-success w-100">
                         <i class="fas fa-directions"></i> Obtenir l'Itinéraire
                     </a>
                 </div>
+
+
             </div>
         </div>
     </div>

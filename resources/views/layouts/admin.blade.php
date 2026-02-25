@@ -12,6 +12,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -688,6 +692,19 @@
             </div>
             @endif
 
+            {{-- LiveStream : réservé Admin & Super Admin --}}
+            @if(Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin'))
+            <div class="nav-section">
+                <div class="nav-section-title">Live</div>
+
+                <a class="nav-link {{ request()->routeIs('admin.livestreams.*') ? 'active' : '' }}"
+                href="{{ route('admin.live-streams.index') }}">
+                    <i class="fas fa-video"></i>
+                    <span>LiveStream</span>
+                </a>
+            </div>
+            @endif
+
             <!-- Dons & Donateurs -->
             @if(Auth::user()->hasPermission('donations.view'))
             <div class="nav-section">
@@ -803,21 +820,6 @@
                             @yield('breadcrumb')
                         </ol>
                     </nav>
-                </div>
-                <div class="user-menu dropdown">
-                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i>
-                        {{ Auth::user()->name }}
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('admin.profile') }}"><i class="fas fa-user me-2"></i> Mon profil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
-                            </a>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>

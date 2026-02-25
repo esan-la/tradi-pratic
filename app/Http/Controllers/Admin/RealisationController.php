@@ -25,29 +25,69 @@ class RealisationController extends Controller
         $query = Realisation::query();
 
         // Recherche
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('short_description', 'like', "%{$search}%");
             });
         }
 
         // Filtrage par catégorie
-        if ($request->has('category') && $request->category != '') {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
         // Filtrage par statut de publication
-        if ($request->has('published') && $request->published != '') {
+        if ($request->filled('published')) {
             $query->where('is_published', $request->published);
         }
 
-        $realisations = $query->latest()->paginate(15);
+        // Filtrage par vedette
+        if ($request->filled('featured')) {
+            $query->where('is_featured', $request->featured);
+        }
 
-        $categories = ['Agriculture', 'Élevage', 'Artisanat', 'Autres'];
+        // Tri
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'title':
+                $query->orderBy('title', 'asc');
+                break;
+            case 'views':
+                $query->orderBy('views', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('order', 'asc')->latest();
+                break;
+        }
 
-        return view('admin.realisations.index', compact('realisations', 'categories'));
+        $realisations = $query->paginate(15)->withQueryString();
+
+        // Catégories
+        $categories = [
+            'Agriculture' => 'Agriculture',
+            'Élevage' => 'Élevage',
+            'Artisanat' => 'Artisanat',
+            'Santé' => 'Santé',
+            'Éducation' => 'Éducation',
+            'Autres' => 'Autres',
+        ];
+
+        // Statistiques
+        $stats = [
+            'total' => Realisation::count(),
+            'published' => Realisation::where('is_published', true)->count(),
+            'featured' => Realisation::where('is_featured', true)->count(),
+            'draft' => Realisation::where('is_published', false)->count(),
+        ];
+
+        return view('admin.realisations.index', compact('realisations', 'categories', 'stats'));
     }
 
     /**
@@ -55,7 +95,13 @@ class RealisationController extends Controller
      */
     public function create()
     {
-        $categories = ['Agriculture', 'Élevage', 'Artisanat', 'Autres'];
+        $categories = [
+            'Agriculture' => 'Agriculture',
+            'Élevage' => 'Élevage',
+            'Artisanat' => 'Artisanat',
+            'Autres' => 'Autres',
+        ];
+
         return view('admin.realisations.create', compact('categories'));
     }
 
@@ -66,24 +112,19 @@ class RealisationController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'short_description' => 'nullable|string|max:500',
             'description' => 'required|string',
             'category' => 'required|string',
-            'image' => 'required|image|max:10240', // 10MB
-            'gallery.*' => 'nullable|image|max:10240', // 10MB
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB
+            'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'video_url' => 'nullable|url',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
+            'order' => 'nullable|integer|min:0',
         ]);
 
-        // Générer le slug
-        $validated['slug'] = Str::slug($validated['title']);
-
-        // Assurer l'unicité du slug
-        $originalSlug = $validated['slug'];
-        $counter = 1;
-        while (Realisation::where('slug', $validated['slug'])->exists()) {
-            $validated['slug'] = $originalSlug . '-' . $counter;
-            $counter++;
-        }
+        // Générer le slug unique
+        $validated['slug'] = $this->generateUniqueSlug($validated['title']);
 
         // Upload de l'image principale
         if ($request->hasFile('image')) {
@@ -102,23 +143,15 @@ class RealisationController extends Controller
         }
 
         // Gérer les checkboxes
-        $validated['is_featured'] = $request->has('is_featured') && $request->is_featured == '1';
-        $validated['is_published'] = $request->has('is_published') && $request->is_published == '1';
+        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['is_published'] = $request->boolean('is_published');
+        $validated['order'] = $request->get('order', 0);
 
         // Créer la réalisation
         $realisation = Realisation::create($validated);
 
         // Logger l'activité
-        try {
-            if (function_exists('activity')) {
-                activity()
-                    ->performedOn($realisation)
-                    ->causedBy(auth()->user())
-                    ->log('Création de la réalisation : ' . $realisation->title);
-            }
-        } catch (\Exception $e) {
-            // Ignorer si activity log n'est pas disponible
-        }
+        $this->logActivity('create', $realisation);
 
         return redirect()->route('admin.realisations.index')
             ->with('success', 'Réalisation créée avec succès.');
@@ -137,7 +170,15 @@ class RealisationController extends Controller
      */
     public function edit(Realisation $realisation)
     {
-        $categories = ['Agriculture', 'Élevage', 'Artisanat', 'Autres'];
+        $categories = [
+            'Agriculture' => 'Agriculture',
+            'Élevage' => 'Élevage',
+            'Artisanat' => 'Artisanat',
+            'Santé' => 'Santé',
+            'Éducation' => 'Éducation',
+            'Autres' => 'Autres',
+        ];
+
         return view('admin.realisations.edit', compact('realisation', 'categories'));
     }
 
@@ -148,26 +189,20 @@ class RealisationController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'short_description' => 'nullable|string|max:500',
             'description' => 'required|string',
             'category' => 'required|string',
-            'image' => 'nullable|image|max:10240', // 10MB, optionnel en édition
-            'gallery.*' => 'nullable|image|max:10240', // 10MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'video_url' => 'nullable|url',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
+            'order' => 'nullable|integer|min:0',
+            'remove_gallery' => 'nullable|array', // IDs des images à supprimer
         ]);
 
-        // Générer le slug
-        $validated['slug'] = Str::slug($validated['title']);
-
-        // Assurer l'unicité du slug (sauf pour la réalisation actuelle)
-        $originalSlug = $validated['slug'];
-        $counter = 1;
-        while (Realisation::where('slug', $validated['slug'])
-            ->where('id', '!=', $realisation->id)
-            ->exists()) {
-            $validated['slug'] = $originalSlug . '-' . $counter;
-            $counter++;
-        }
+        // Générer le slug unique (sauf pour la réalisation actuelle)
+        $validated['slug'] = $this->generateUniqueSlug($validated['title'], $realisation->id);
 
         // Upload de la nouvelle image principale si fournie
         if ($request->hasFile('image')) {
@@ -182,39 +217,41 @@ class RealisationController extends Controller
             );
         }
 
-        // Upload de la nouvelle galerie si fournie
-        if ($request->hasFile('gallery')) {
-            // Supprimer les anciennes images de la galerie
-            if ($realisation->gallery && is_array($realisation->gallery)) {
-                foreach ($realisation->gallery as $oldImage) {
-                    $this->mediaService->delete($oldImage);
+        // Gestion de la galerie
+        $currentGallery = $realisation->gallery ?? [];
+
+        // Supprimer les images sélectionnées
+        if ($request->filled('remove_gallery')) {
+            foreach ($request->remove_gallery as $index) {
+                if (isset($currentGallery[$index])) {
+                    $this->mediaService->delete($currentGallery[$index]);
+                    unset($currentGallery[$index]);
                 }
             }
+            $currentGallery = array_values($currentGallery); // Réindexer
+        }
 
-            $validated['gallery'] = $this->mediaService->uploadMultiple(
+        // Ajouter les nouvelles images
+        if ($request->hasFile('gallery')) {
+            $newImages = $this->mediaService->uploadMultiple(
                 $request->file('gallery'),
                 'realisations/gallery'
             );
+            $currentGallery = array_merge($currentGallery, $newImages);
         }
 
+        $validated['gallery'] = !empty($currentGallery) ? $currentGallery : null;
+
         // Gérer les checkboxes
-        $validated['is_featured'] = $request->has('is_featured') && $request->is_featured == '1';
-        $validated['is_published'] = $request->has('is_published') && $request->is_published == '1';
+        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['is_published'] = $request->boolean('is_published');
+        $validated['order'] = $request->get('order', 0);
 
         // Mettre à jour
         $realisation->update($validated);
 
         // Logger l'activité
-        try {
-            if (function_exists('activity')) {
-                activity()
-                    ->performedOn($realisation)
-                    ->causedBy(auth()->user())
-                    ->log('Modification de la réalisation : ' . $realisation->title);
-            }
-        } catch (\Exception $e) {
-            // Ignorer si activity log n'est pas disponible
-        }
+        $this->logActivity('update', $realisation);
 
         return redirect()->route('admin.realisations.index')
             ->with('success', 'Réalisation mise à jour avec succès.');
@@ -242,17 +279,157 @@ class RealisationController extends Controller
         $realisation->delete();
 
         // Logger l'activité
-        try {
-            if (function_exists('activity')) {
-                activity()
-                    ->causedBy(auth()->user())
-                    ->log('Suppression de la réalisation : ' . $title);
-            }
-        } catch (\Exception $e) {
-            // Ignorer si activity log n'est pas disponible
-        }
+        $this->logActivity('delete', null, "Suppression de la réalisation : $title");
 
         return redirect()->route('admin.realisations.index')
             ->with('success', 'Réalisation supprimée avec succès.');
+    }
+
+    /**
+     * Toggle publish status
+     */
+    public function togglePublish(Realisation $realisation)
+    {
+        $realisation->update([
+            'is_published' => !$realisation->is_published
+        ]);
+
+        $status = $realisation->is_published ? 'publiée' : 'dépubliée';
+
+        $this->logActivity('toggle', $realisation, "Réalisation $status");
+
+        return back()->with('success', "Réalisation $status avec succès.");
+    }
+
+    /**
+     * Toggle featured status
+     */
+    public function toggleFeatured(Realisation $realisation)
+    {
+        $realisation->update([
+            'is_featured' => !$realisation->is_featured
+        ]);
+
+        $status = $realisation->is_featured ? 'mise en vedette' : 'retirée de la vedette';
+
+        $this->logActivity('toggle', $realisation, "Réalisation $status");
+
+        return back()->with('success', "Réalisation $status avec succès.");
+    }
+
+    /**
+     * Reorder realisations
+     */
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:realisations,id',
+            'items.*.order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($request->items as $item) {
+            Realisation::where('id', $item['id'])->update(['order' => $item['order']]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ordre mis à jour avec succès.'
+        ]);
+    }
+
+    /**
+     * Bulk delete realisations
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:realisations,id',
+        ]);
+
+        $count = 0;
+        foreach ($request->ids as $id) {
+            $realisation = Realisation::find($id);
+            if ($realisation) {
+                // Supprimer les médias
+                if ($realisation->image) {
+                    $this->mediaService->delete($realisation->image);
+                }
+                if ($realisation->gallery) {
+                    foreach ($realisation->gallery as $image) {
+                        $this->mediaService->delete($image);
+                    }
+                }
+
+                $realisation->delete();
+                $count++;
+            }
+        }
+
+        $this->logActivity('bulk_delete', null, "Suppression en masse de $count réalisation(s)");
+
+        return back()->with('success', "$count réalisation(s) supprimée(s) avec succès.");
+    }
+
+    /**
+     * Generate unique slug
+     */
+    private function generateUniqueSlug($title, $excludeId = null)
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $counter = 1;
+
+        $query = Realisation::where('slug', $slug);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        while ($query->exists()) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+
+            $query = Realisation::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Log activity
+     */
+    private function logActivity($action, $realisation = null, $message = null)
+    {
+        try {
+            if (function_exists('activity')) {
+                $log = activity();
+
+                if ($realisation) {
+                    $log->performedOn($realisation);
+                }
+
+                if (auth()->check()) {
+                    $log->causedBy(auth()->user());
+                }
+
+                $logMessage = $message ?? match($action) {
+                    'create' => 'Création de la réalisation : ' . $realisation->title,
+                    'update' => 'Modification de la réalisation : ' . $realisation->title,
+                    'delete' => 'Suppression de la réalisation',
+                    'toggle' => 'Modification du statut de la réalisation : ' . $realisation->title,
+                    default => 'Action sur réalisation'
+                };
+
+                $log->log($logMessage);
+            }
+        } catch (\Exception $e) {
+            // Ignorer si activity log n'est pas disponible
+            \Log::debug('Activity log error: ' . $e->getMessage());
+        }
     }
 }

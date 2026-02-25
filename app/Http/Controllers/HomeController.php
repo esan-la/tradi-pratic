@@ -17,8 +17,8 @@ class HomeController extends Controller
     {
         // Réalisations en vedette
         $featuredRealisations = Realisation::where('is_published', true)
-            ->where('is_featured', true)
-            ->latest()
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
 

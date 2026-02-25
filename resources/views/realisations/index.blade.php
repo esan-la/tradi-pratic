@@ -10,6 +10,14 @@
             <div class="col-lg-8">
                 <h1 class="display-4 fw-bold mb-3">Nos Réalisations</h1>
                 <p class="lead mb-0">Découvrez nos projets en agriculture, élevage et artisanat</p>
+                @if(isset($stats))
+                    <p class="mt-3 mb-0">
+                        <span class="badge bg-white text-success fs-6">
+                            <i class="fas fa-check-circle me-1"></i>
+                            {{ $stats['total'] }} projets réalisés
+                        </span>
+                    </p>
+                @endif
             </div>
             <div class="col-lg-4 text-lg-end">
                 <i class="fas fa-seedling fa-5x opacity-50"></i>
@@ -28,61 +36,111 @@
     </div>
 </nav>
 
-<!-- Filter & Search Section -->
+<!-- Filtres -->
 <section class="py-4 bg-light border-bottom">
     <div class="container">
-        <div class="row g-3 align-items-center">
-            <!-- Barre de recherche -->
-            <div class="col-lg-4">
-                <form action="{{ route('realisations') }}" method="GET" class="position-relative">
-                    <input type="text"
-                           name="search"
-                           class="form-control"
-                           placeholder="Rechercher une réalisation..."
-                           value="{{ request('search') }}">
-                    @if(request('category'))
-                        <input type="hidden" name="category" value="{{ request('category') }}">
-                    @endif
-                    <button type="submit" class="btn btn-success position-absolute end-0 top-0">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </div>
+        <form action="{{ route('realisations.index') }}" method="GET" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <!-- Recherche -->
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label small text-muted mb-1">Recherche</label>
+                    <div class="position-relative">
+                        <input type="text" name="search" class="form-control pe-5"
+                               placeholder="Rechercher..." value="{{ request('search') }}">
+                        @if(request('search'))
+                            <button type="button"
+                                    class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted"
+                                    onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
 
-            <!-- Filtres par catégorie -->
-            <div class="col-lg-8">
-                <div class="d-flex justify-content-lg-end justify-content-center gap-2 flex-wrap">
-                    <a href="{{ route('realisations', ['search' => request('search')]) }}"
-                       class="btn {{ !request('category') ? 'btn-success' : 'btn-outline-success' }}">
-                        <i class="fas fa-th me-1"></i> Toutes
-                    </a>
-                    @foreach($categories as $category)
-                        <a href="{{ route('realisations', ['category' => $category, 'search' => request('search')]) }}"
-                           class="btn {{ request('category') == $category ? 'btn-success' : 'btn-outline-success' }}">
-                            {{ $category }}
-                        </a>
-                    @endforeach
+                <!-- Tri -->
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small text-muted mb-1">Trier par</label>
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="latest" {{ request('sort', 'latest') == 'latest' ? 'selected' : '' }}>Plus récents</option>
+                        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Plus anciens</option>
+                        <option value="title" {{ request('sort') == 'title' ? 'selected' : '' }}>Titre (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Par page -->
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small text-muted mb-1">Afficher</label>
+                    <select name="per_page" class="form-select" onchange="this.form.submit()">
+                        <option value="12" {{ request('per_page', 12) == 12 ? 'selected' : '' }}>12</option>
+                        <option value="24" {{ request('per_page') == 24 ? 'selected' : '' }}>24</option>
+                        <option value="48" {{ request('per_page') == 48 ? 'selected' : '' }}>48</option>
+                    </select>
+                </div>
+
+                <!-- Boutons -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-grow-1">
+                            <i class="fas fa-search me-1"></i> Rechercher
+                        </button>
+                        @if(request()->hasAny(['search', 'category', 'sort', 'per_page']))
+                            <a href="{{ route('realisations.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Catégories -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <label class="form-label small text-muted mb-2">Catégories</label>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <input type="radio" class="btn-check" name="category" id="cat-all" value=""
+                               {{ !request('category') ? 'checked' : '' }} onchange="this.form.submit()">
+                        <label class="btn btn-sm btn-outline-success" for="cat-all">
+                            <i class="fas fa-th me-1"></i> Toutes
+                            @if(isset($stats))
+                                <span class="badge bg-success">{{ $stats['total'] }}</span>
+                            @endif
+                        </label>
+
+                        @foreach($categories as $key => $category)
+                            <input type="radio" class="btn-check" name="category" id="cat-{{ $key }}"
+                                   value="{{ $category }}" {{ request('category') == $category ? 'checked' : '' }}
+                                   onchange="this.form.submit()">
+                            <label class="btn btn-sm btn-outline-success" for="cat-{{ $key }}">
+                                {{ $category }}
+                                @if(isset($stats['by_category'][$category]))
+                                    <span class="badge bg-success">{{ $stats['by_category'][$category] }}</span>
+                                @endif
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </section>
 
-<!-- Realisations Grid -->
+<!-- Grid -->
 <section class="py-5">
     <div class="container">
         @if($realisations->count() > 0)
             <div class="row mb-4">
                 <div class="col-12">
-                    <p class="text-muted">
-                        <strong>{{ $realisations->total() }}</strong> réalisation(s) trouvée(s)
-                        @if(request('category'))
-                            dans la catégorie "<strong>{{ request('category') }}</strong>"
-                        @endif
-                        @if(request('search'))
-                            pour "<strong>{{ request('search') }}</strong>"
-                        @endif
-                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="text-muted mb-0">
+                            <strong>{{ $realisations->total() }}</strong> réalisation(s)
+                            @if(request('category'))
+                                dans "<strong>{{ request('category') }}</strong>"
+                            @endif
+                        </p>
+                        <p class="text-muted mb-0 small">
+                            Page {{ $realisations->currentPage() }} sur {{ $realisations->lastPage() }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -90,7 +148,7 @@
                 @foreach($realisations as $realisation)
                     <div class="col-md-6 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm realisation-card">
-                            <!-- Image avec overlay -->
+                            <!-- Image -->
                             <div class="position-relative overflow-hidden" style="height: 250px;">
                                 @if($realisation->image)
                                     <img src="{{ asset('storage/' . $realisation->image) }}"
@@ -109,17 +167,35 @@
                                     {{ $realisation->category }}
                                 </span>
 
-                                <!-- Badge vedette si applicable -->
-                                @if($realisation->is_featured)
+                                <!-- Badge vedette -->
+                                @if($realisation->is_featured ?? false)
                                     <span class="position-absolute top-0 start-0 m-3 badge bg-warning text-dark">
                                         <i class="fas fa-star me-1"></i>Vedette
                                     </span>
                                 @endif
 
-                                <!-- Badge galerie si présente -->
-                                @if($realisation->hasGallery())
+                                <!-- Badge galerie -->
+                                @php
+                                    $hasGallery = isset($realisation->gallery) && is_array($realisation->gallery) && count($realisation->gallery) > 0;
+                                    $totalPhotos = $hasGallery ? count($realisation->gallery) + 1 : 1;
+                                @endphp
+                                @if($hasGallery)
                                     <span class="position-absolute bottom-0 start-0 m-3 badge bg-dark bg-opacity-75">
-                                        <i class="fas fa-images me-1"></i>{{ $realisation->gallery_count + 1 }} photos
+                                        <i class="fas fa-images me-1"></i>{{ $totalPhotos }} photos
+                                    </span>
+                                @endif
+
+                                <!-- Badge vidéo -->
+                                @if($realisation->video_url)
+                                    <span class="position-absolute bottom-0 end-0 m-3 badge bg-danger">
+                                        <i class="fab fa-youtube me-1"></i>Vidéo
+                                    </span>
+                                @endif
+
+                                <!-- Badge vues -->
+                                @if(isset($realisation->views) && $realisation->views > 0)
+                                    <span class="position-absolute top-0 start-0 mt-5 ms-3 badge bg-dark bg-opacity-75">
+                                        <i class="fas fa-eye me-1"></i>{{ $realisation->views }}
                                     </span>
                                 @endif
                             </div>
@@ -133,7 +209,7 @@
                                 </h5>
 
                                 <p class="card-text text-muted flex-grow-1" style="line-height: 1.6;">
-                                    {{ Str::limit($realisation->description, 120) }}
+                                    {{ Str::limit($realisation->short_description ?? strip_tags($realisation->description), 120) }}
                                 </p>
 
                                 <!-- Métadonnées -->
@@ -142,17 +218,18 @@
                                         <i class="far fa-calendar me-1"></i>
                                         {{ $realisation->created_at->format('d/m/Y') }}
                                     </div>
-                                    @if($realisation->video_url)
-                                        <div class="text-danger">
-                                            <i class="fab fa-youtube me-1"></i>Vidéo
-                                        </div>
-                                    @endif
+                                    <div>
+                                        <i class="fas fa-images me-1"></i>{{ $totalPhotos }}
+                                        @if($realisation->video_url)
+                                            <i class="fab fa-youtube ms-2 text-danger"></i>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="card-footer bg-white border-0 pt-0">
                                 <a href="{{ route('realisations.show', $realisation->slug) }}"
-                                   class="btn btn-outline-success btn-sm w-100">
+                                   class="btn btn-outline-success btn-sm w-100 position-relative">
                                     <i class="fas fa-arrow-right me-1"></i> Découvrir le projet
                                 </a>
                             </div>
@@ -163,66 +240,40 @@
 
             <!-- Pagination -->
             <div class="row mt-5">
-                <div class="col-12 d-flex justify-content-center">
-                    {{ $realisations->appends(request()->query())->links() }}
+                <div class="col-12">
+                    {{ $realisations->links() }}
                 </div>
             </div>
         @else
             <!-- Empty State -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="text-center py-5">
-                        <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
-                        <h3 class="text-muted mb-3">Aucune réalisation trouvée</h3>
-                        <p class="text-muted mb-4">
-                            @if(request('search'))
-                                Aucun résultat pour "<strong>{{ request('search') }}</strong>"
-                                @if(request('category'))
-                                    dans la catégorie "<strong>{{ request('category') }}</strong>"
-                                @endif
-                            @elseif(request('category'))
-                                Aucune réalisation dans la catégorie "<strong>{{ request('category') }}</strong>"
-                            @else
-                                Revenez plus tard pour découvrir nos projets
-                            @endif
-                        </p>
-
-                        @if(request('search') || request('category'))
-                            <div class="d-flex justify-content-center gap-2">
-                                @if(request('search'))
-                                    <a href="{{ route('realisations.index', ['category' => request('category')]) }}"
-                                       class="btn btn-outline-success">
-                                        <i class="fas fa-times me-2"></i> Effacer la recherche
-                                    </a>
-                                @endif
-
-                                @if(request('category'))
-                                    <a href="{{ route('realisations.index', ['search' => request('search')]) }}"
-                                       class="btn btn-outline-success">
-                                        <i class="fas fa-times me-2"></i> Effacer le filtre
-                                    </a>
-                                @endif
-
-                                <a href="{{ route('realisations.index') }}" class="btn btn-success">
-                                    <i class="fas fa-redo me-2"></i> Voir toutes les réalisations
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">Aucune réalisation trouvée</h3>
+                <p class="text-muted mb-4">
+                    @if(request('search'))
+                        Aucun résultat pour "<strong>{{ request('search') }}</strong>"
+                    @else
+                        Revenez plus tard pour découvrir nos projets
+                    @endif
+                </p>
+                @if(request()->hasAny(['search', 'category']))
+                    <a href="{{ route('realisations.index') }}" class="btn btn-success">
+                        <i class="fas fa-redo me-2"></i> Tout afficher
+                    </a>
+                @endif
             </div>
         @endif
     </div>
 </section>
 
-<!-- CTA Section -->
+<!-- CTA -->
 <section class="py-5 bg-light">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h3 class="fw-bold mb-3">Intéressé par nos projets ?</h3>
                 <p class="lead text-muted mb-lg-0">
-                    Contactez-nous pour en savoir plus sur nos réalisations et collaborations
+                    Contactez-nous pour en savoir plus sur nos réalisations
                 </p>
             </div>
             <div class="col-lg-4 text-lg-end">
@@ -237,70 +288,43 @@
 
 @push('styles')
 <style>
-    .realisation-card {
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
+.realisation-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
 
-    .realisation-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-    }
+.realisation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
 
-    .realisation-card:hover img {
-        transform: scale(1.05);
-    }
+.realisation-card:hover img {
+    transform: scale(1.05);
+}
 
-    .realisation-card .stretched-link::after {
-        z-index: 0;
-    }
+.realisation-card .stretched-link::after {
+    z-index: 0;
+}
 
-    .realisation-card .btn,
-    .realisation-card .badge {
-        position: relative;
-        z-index: 1;
-    }
+.realisation-card .btn,
+.realisation-card .badge {
+    position: relative;
+    z-index: 1;
+}
 
-    /* Style pour la barre de recherche */
-    .form-control:focus {
-        border-color: #198754;
-        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
-    }
-
-    /* Animation pour les cartes */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .realisation-card {
-        animation: fadeIn 0.5s ease-out;
-    }
+.btn-check:checked + .btn-outline-success {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
-    // Auto-submit du formulaire de recherche si vide
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchForm = document.querySelector('form[action*="realisations"]');
-        const searchInput = searchForm?.querySelector('input[name="search"]');
-
-        if (searchInput) {
-            // Permettre de soumettre avec Enter
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchForm.submit();
-                }
-            });
-        }
-    });
+function clearSearch() {
+    document.querySelector('input[name="search"]').value = '';
+    document.getElementById('filterForm').submit();
+}
 </script>
 @endpush
-

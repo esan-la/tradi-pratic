@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\ResetPasswordNotification; // ← CORRECTION ICI
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'nom',
@@ -29,6 +31,46 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Nom complet
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->prenom . ' ' . $this->nom;
+    }
+
+    /**
+     * Initiales pour avatar par défaut
+     */
+    public function getInitialsAttribute(): string
+    {
+        $prenom = mb_substr($this->prenom, 0, 1);
+        $nom = mb_substr($this->nom, 0, 1);
+        return mb_strtoupper($prenom . $nom);
+    }
+
+    /**
+     * URL de l'avatar
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->avatar) {
+            return asset('storage/avatars/' . $this->avatar);
+        }
+
+        // Avatar par défaut avec initiales (UI Avatars)
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name)
+            . '&size=200&background=198754&color=ffffff&bold=true&font-size=0.4';
+    }
+
+    /**
+     * Notification de réinitialisation de mot de passe personnalisée
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
 
     // Relations
     public function roles()

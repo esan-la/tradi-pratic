@@ -12,34 +12,37 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('description');
-            $table->string('category'); // Changé de enum à string pour plus de flexibilité
-            $table->string('image'); // Image principale (obligatoire)
-            $table->json('gallery')->nullable(); // Galerie d'images (optionnel)
+
+            // Descriptions (CMS)
+            $table->text('short_description')->nullable(); // Résumé court
+            $table->longText('description'); // Description complète (HTML via CMS)
+
+            // Catégorie et médias
+            $table->string('category');
+            $table->string('image'); // Image principale (path)
+            $table->json('gallery')->nullable(); // Galerie JSON: ["path1.jpg", "path2.jpg"]
             $table->string('video_url')->nullable();
+
+            // Statuts et ordre
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_published')->default(true);
             $table->integer('order')->default(0);
+
+            // Compteurs (optionnel)
+            $table->unsignedInteger('views')->default(0);
+
             $table->timestamps();
 
-            // Index pour améliorer les performances
+            // Index pour performances
             $table->index(['category', 'is_published']);
             $table->index('is_featured');
             $table->index(['order', 'created_at']);
+            $table->index('slug');
         });
     }
 
-    // public function down(): void
-    // {
-    //     Schema::dropIfExists('realisations');
-    // }
     public function down(): void
     {
-        Schema::table('realisations', function (Blueprint $table) {
-            $table->dropColumn(['image', 'gallery']);
-            $table->json('images')->nullable();
-            $table->dropIndex(['realisations_is_featured_index']);
-            $table->dropIndex(['realisations_order_created_at_index']);
-        });
+        Schema::dropIfExists('realisations');
     }
 };
