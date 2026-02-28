@@ -30,7 +30,7 @@
 
                 <div class="card shadow-lg border-0 rounded-4">
                     <div class="card-body p-4 p-md-5">
-                        <form method="POST" action="{{ route('password.update') }}" id="resetForm">
+                        <form method="POST" action="{{ route('auth.password.update') }}" id="resetForm">
                             @csrf
 
                             <input type="hidden" name="token" value="{{ $token }}">

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ResetPasswordMail;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\ResetPasswordNotification; // ← CORRECTION ICI
@@ -65,12 +67,42 @@ class User extends Authenticatable
     }
 
     /**
-     * Notification de réinitialisation de mot de passe personnalisée
+     * Envoyer la notification de réinitialisation de mot de passe
+     * Override de la méthode par défaut
      */
     public function sendPasswordResetNotification($token): void
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $resetUrl = url(route('auth.password.reset', [
+            'token' => $token,
+            'email' => $this->email,
+        ], false));
+
+        $expiresInMinutes = config('auth.passwords.' .
+            config('auth.defaults.passwords') . '.expire', 60);
+
+        Mail::to($this->email)->send(
+            new ResetPasswordMail(
+                $resetUrl,
+                $this->prenom ?? 'Utilisateur',  // ✅ Valeur par défaut si null
+                $expiresInMinutes)
+        );
     }
+
+    /**
+     * Les réalisations de l'utilisateur
+     */
+    // public function realisations(): HasMany
+    // {
+    //     return $this->hasMany(Realisation::class);
+    // }
+
+    // /**
+    //  * Les recettes de l'utilisateur
+    //  */
+    // public function recipes(): HasMany
+    // {
+    //     return $this->hasMany(Recette::class);
+    // }
 
     // Relations
     public function roles()

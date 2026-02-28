@@ -8,12 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules;
 
 class ResetPasswordController extends Controller
 {
-    /**
-     * Afficher le formulaire de réinitialisation
-     */
     public function showResetForm(Request $request, string $token)
     {
         return view('auth.reset-password', [
@@ -22,26 +20,21 @@ class ResetPasswordController extends Controller
         ]);
     }
 
-    /**
-     * Réinitialiser le mot de passe
-     */
     public function reset(Request $request)
     {
         $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'min:8', 'confirmed', Rules\Password::defaults()],
         ], [
-            'email.required' => 'L\'adresse email est obligatoire.',
-            'email.email' => 'Veuillez entrer une adresse email valide.',
-            'password.required' => 'Le nouveau mot de passe est obligatoire.',
+            'password.required' => 'Le mot de passe est obligatoire.',
             'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, string $password) {
+            function ($user, $password) {
                 $user->forceFill([
                     'password' => Hash::make($password),
                 ])->setRememberToken(Str::random(60));
@@ -52,22 +45,19 @@ class ResetPasswordController extends Controller
             }
         );
 
-        if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('login')
-                ->with('success', 'Votre mot de passe a été réinitialisé avec succès ! Vous pouvez maintenant vous connecter.');
-        }
-
-        return back()->withErrors(['email' => $this->translateStatus($status)]);
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', 'Votre mot de passe a été réinitialisé avec succès ! 🎉')
+            : back()->withErrors(['email' => $this->getErrorMessage($status)]);
     }
 
-    private function translateStatus(string $status): string
+    private function getErrorMessage(string $status): string
     {
-        $translations = [
+        $messages = [
             Password::INVALID_USER => 'Aucun compte n\'est associé à cette adresse email.',
-            Password::INVALID_TOKEN => 'Ce lien de réinitialisation est invalide ou a expiré.',
+            Password::INVALID_TOKEN => 'Ce lien de réinitialisation est invalide ou expiré.',
             Password::RESET_THROTTLED => 'Veuillez patienter avant de réessayer.',
         ];
 
-        return $translations[$status] ?? 'Une erreur est survenue.';
+        return $messages[$status] ?? 'Une erreur est survenue. Veuillez réessayer.';
     }
 }

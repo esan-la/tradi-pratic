@@ -76,7 +76,7 @@
                                     <label for="password" class="form-label fw-semibold mb-0">
                                         <i class="fas fa-lock text-success me-1"></i> Mot de passe
                                     </label>
-                                    <a href="{{ route('password.request') }}"
+                                    <a href="{{ route('auth.password.request') }}"
                                        class="small text-success text-decoration-none">
                                         Mot de passe oublié ?
                                     </a>

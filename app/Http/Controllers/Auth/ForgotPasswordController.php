@@ -8,21 +8,15 @@ use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
 {
-    /**
-     * Afficher le formulaire de demande de réinitialisation
-     */
     public function showLinkRequestForm()
     {
         return view('auth.forgot-password');
     }
 
-    /**
-     * Envoyer le lien de réinitialisation par email
-     */
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => ['required', 'email'],
         ], [
             'email.required' => 'L\'adresse email est obligatoire.',
             'email.email' => 'Veuillez entrer une adresse email valide.',
@@ -32,27 +26,18 @@ class ForgotPasswordController extends Controller
             $request->only('email')
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('success',
-                'Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception (et vos spams).'
-            );
-        }
-
-        return back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => $this->translateStatus($status)]);
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with(['status' => 'Un lien de réinitialisation a été envoyé à votre adresse email ! 📧'])
+            : back()->withErrors(['email' => $this->getErrorMessage($status)]);
     }
 
-    /**
-     * Traduire les statuts en français
-     */
-    private function translateStatus(string $status): string
+    private function getErrorMessage(string $status): string
     {
-        $translations = [
+        $messages = [
             Password::INVALID_USER => 'Aucun compte n\'est associé à cette adresse email.',
             Password::RESET_THROTTLED => 'Veuillez patienter avant de réessayer.',
         ];
 
-        return $translations[$status] ?? 'Une erreur est survenue. Veuillez réessayer.';
+        return $messages[$status] ?? 'Une erreur est survenue. Veuillez réessayer.';
     }
 }

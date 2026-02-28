@@ -17,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(MediaStorageService::class, function ($app) {
             return new MediaStorageService();
         });
+        $this->app->singleton(EmailService::class, function ($app) {
+            return new EmailService();
+        });
     }
 
     /**

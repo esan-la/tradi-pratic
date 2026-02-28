@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\EmailService;
 use App\Models\Appointment;
 use App\Models\Event;
 use App\Models\User;
@@ -14,10 +15,12 @@ use Carbon\Carbon;
 class AppointmentController extends Controller
 {
     protected $mediaService;
+    protected EmailService $emailService;
 
-    public function __construct(MediaStorageService $mediaService)
+    public function __construct(MediaStorageService $mediaService, EmailService $emailService)
     {
         $this->mediaService = $mediaService;
+        $this->emailService = $emailService;
     }
 
     /**
@@ -174,6 +177,9 @@ class AppointmentController extends Controller
             } catch (\Exception $e) {
                 // Ignorer si activity log n'est pas disponible
             }
+
+            // Envoi email en queue
+            $this->emailService->sendAppointmentConfirmation($appointment);
 
             \DB::commit();
 
@@ -355,6 +361,8 @@ class AppointmentController extends Controller
         } catch (\Exception $e) {
             // Ignorer
         }
+        // Envoi email en queue
+        $this->emailService->sendAppointmentStatusChanged($appointment, $appointment->getOriginal('status'));
 
         return back()->with('success', 'Statut mis à jour avec succès.');
     }
