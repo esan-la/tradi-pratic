@@ -9,12 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('hotel_reservations', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('guest_name');
             $table->string('guest_email')->nullable();
             $table->string('guest_phone');
-            $table->foreignId('hotel_id')->constrained()->onDelete('cascade');
-            $table->foreignId('room_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('hotel_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
             $table->date('check_in');
             $table->date('check_out');
             $table->integer('total_nights');

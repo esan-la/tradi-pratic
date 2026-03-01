@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
 class Recipe extends Model
 {
+    use HasUuid;
+
     protected $fillable = [
         'title',
         'slug',

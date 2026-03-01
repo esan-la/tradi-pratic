@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
+use App\Traits\HasUuid;
 use App\Mail\ResetPasswordMail;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -13,7 +14,7 @@ use App\Notifications\ResetPasswordNotification; // ← CORRECTION ICI
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasUuid;
 
     protected $fillable = [
         'nom',
@@ -87,22 +88,6 @@ class User extends Authenticatable
                 $expiresInMinutes)
         );
     }
-
-    /**
-     * Les réalisations de l'utilisateur
-     */
-    // public function realisations(): HasMany
-    // {
-    //     return $this->hasMany(Realisation::class);
-    // }
-
-    // /**
-    //  * Les recettes de l'utilisateur
-    //  */
-    // public function recipes(): HasMany
-    // {
-    //     return $this->hasMany(Recette::class);
-    // }
 
     // Relations
     public function roles()

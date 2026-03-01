@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_hotel_reservations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('payment_id')->constrained()->onDelete('cascade');
-            $table->foreignId('hotel_reservation_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('payment_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('hotel_reservation_id')->constrained()->onDelete('cascade');
         });
     }
 

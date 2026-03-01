@@ -1,5 +1,3 @@
-// database/migrations/2024_01_15_000001_create_live_streams_table.php
-
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -11,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('live_streams', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('youtube_video_id')->nullable();
@@ -25,7 +23,7 @@ return new class extends Migration
             $table->boolean('chat_enabled')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->string('category')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
 
             $table->index('status');

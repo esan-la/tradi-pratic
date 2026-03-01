@@ -1,9 +1,11 @@
 <?php
+// database/seeders/RoleSeeder.php
 
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class RoleSeeder extends Seeder
@@ -17,30 +19,35 @@ class RoleSeeder extends Seeder
 
         $roles = [
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'super_admin',
                 'description' => 'Super Administrateur - Accès total au système',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'admin',
                 'description' => 'Administrateur - Gestion complète sauf suppression critique',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'manager',
                 'description' => 'Manager - Gestion du contenu de la plateforme',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'receptionist',
                 'description' => 'Réceptionniste - Gestion des réservations et rendez-vous',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'customer_service',
                 'description' => 'Service Client - Gestion des contacts et support',
                 'created_at' => $now,
@@ -53,7 +60,7 @@ class RoleSeeder extends Seeder
         // Attribution des permissions aux rôles
         $this->assignPermissionsToRoles();
 
-        $this->command->info('Rôles créés avec succès!');
+        $this->command->info('✅ Rôles créés avec succès!');
     }
 
     /**
@@ -61,7 +68,7 @@ class RoleSeeder extends Seeder
      */
     private function assignPermissionsToRoles(): void
     {
-        // Récupérer tous les IDs
+        // Récupérer tous les IDs des rôles
         $superAdminId = DB::table('roles')->where('name', 'super_admin')->value('id');
         $adminId = DB::table('roles')->where('name', 'admin')->value('id');
         $managerId = DB::table('roles')->where('name', 'manager')->value('id');
@@ -73,135 +80,162 @@ class RoleSeeder extends Seeder
         // ============================================
         // SUPER ADMIN - Toutes les permissions
         // ============================================
+        $superAdminData = [];
         foreach ($allPermissions as $permissionId) {
-            DB::table('permission_role')->insert([
+            $superAdminData[] = [
                 'role_id' => $superAdminId,
                 'permission_id' => $permissionId,
-            ]);
+            ];
+        }
+        // ✅ Insert par chunks pour performance
+        foreach (array_chunk($superAdminData, 50) as $chunk) {
+            DB::table('permission_role')->insert($chunk);
         }
 
         // ============================================
-        // ADMIN - Tout sauf suppressions critiques (users, roles)
+        // ADMIN - Tout sauf suppressions critiques
         // ============================================
         $adminPermissions = DB::table('permissions')
             ->whereNotIn('name', ['users.delete', 'roles.delete', 'logs.clear'])
             ->pluck('id')
             ->toArray();
 
+        $adminData = [];
         foreach ($adminPermissions as $permissionId) {
-            DB::table('permission_role')->insert([
+            $adminData[] = [
                 'role_id' => $adminId,
                 'permission_id' => $permissionId,
-            ]);
+            ];
+        }
+        foreach (array_chunk($adminData, 50) as $chunk) {
+            DB::table('permission_role')->insert($chunk);
         }
 
         // ============================================
-        // MANAGER - Gestion complète du contenu de la plateforme
+        // MANAGER - Gestion complète du contenu
         // ============================================
         $managerPermissions = DB::table('permissions')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query
-                    // Gestion des disponibilités
                     ->where('name', 'like', 'availabilities.%')
-                    // Gestion des événements
                     ->orWhere('name', 'like', 'events.%')
-                    // Gestion des rendez-vous
                     ->orWhere('name', 'like', 'appointments.%')
-                    // Gestion des réalisations
                     ->orWhere('name', 'like', 'realisations.%')
-                    // Gestion des recettes
                     ->orWhere('name', 'like', 'recipes.%')
-                    // Gestion des témoignages
                     ->orWhere('name', 'like', 'testimonials.%')
-                    // Gestion de la publicité de services
                     ->orWhere('name', 'like', 'pub-services.%')
-                    // Gestion de la bibliographie
                     ->orWhere('name', 'like', 'bibliography.%')
-                    // ✨ NOUVEAU : Gestion des médias - Images
                     ->orWhere('name', 'like', 'media_images.%')
-                    // ✨ NOUVEAU : Gestion des médias - Vidéos
                     ->orWhere('name', 'like', 'media_videos.%')
-                    // Gestion des produits
                     ->orWhere('name', 'like', 'products.%')
-                    // Gestion des commandes
                     ->orWhere('name', 'like', 'orders.%')
-                    // Gestion des hôtels
                     ->orWhere('name', 'like', 'hotels.%')
-                    // Gestion des réservations
                     ->orWhere('name', 'like', 'reservations.%')
-                    // Gestion des dons
                     ->orWhere('name', 'like', 'donations.%')
-                    // Gestion des contacts
                     ->orWhere('name', 'like', 'contacts.%')
-                    // Vue des paiements seulement
-                    ->orWhere('name', 'payments.view');
+                    ->orWhere('name', 'like', 'livestreams.%')
+                    ->orWhere('name', 'like', 'social-links.%')
+                    ->orWhere('name', '=', 'payments.view')
+                    ->orWhere('name', '=', 'dashboard.view')
+                    ->orWhere('name', '=', 'dashboard.stats');
             })
             ->pluck('id')
             ->toArray();
 
+        $managerData = [];
         foreach ($managerPermissions as $permissionId) {
-            DB::table('permission_role')->insert([
+            $managerData[] = [
                 'role_id' => $managerId,
                 'permission_id' => $permissionId,
-            ]);
+            ];
+        }
+        foreach (array_chunk($managerData, 50) as $chunk) {
+            DB::table('permission_role')->insert($chunk);
         }
 
         // ============================================
-        // RECEPTIONIST - Gestion des hôtels, réservations et rendez-vous
+        // RECEPTIONIST - Hôtels, Réservations, RDV
         // ============================================
         $receptionistPermissions = DB::table('permissions')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query
-                    // Vue des disponibilités (consultation planning)
-                    ->where('name', 'availabilities.view')
-                    // Gestion des événements
+                    ->where('name', '=', 'availabilities.view')
                     ->orWhere('name', 'like', 'events.%')
-                    // Gestion des rendez-vous
                     ->orWhere('name', 'like', 'appointments.%')
-                    // Gestion des hôtels
                     ->orWhere('name', 'like', 'hotels.%')
-                    // Gestion des réservations
                     ->orWhere('name', 'like', 'reservations.%')
-                    // Vue et traitement des paiements
-                    ->orWhere('name', 'like', 'payments.%');
+                    ->orWhere('name', 'like', 'payments.%')
+                    ->orWhere('name', '=', 'dashboard.view');
             })
             ->pluck('id')
             ->toArray();
 
+        $receptionistData = [];
         foreach ($receptionistPermissions as $permissionId) {
-            DB::table('permission_role')->insert([
+            $receptionistData[] = [
                 'role_id' => $receptionistId,
                 'permission_id' => $permissionId,
-            ]);
+            ];
+        }
+        foreach (array_chunk($receptionistData, 50) as $chunk) {
+            DB::table('permission_role')->insert($chunk);
         }
 
         // ============================================
-        // CUSTOMER SERVICE - Gestion des contacts uniquement
+        // CUSTOMER SERVICE - Contacts + Témoignages
         // ============================================
         $customerServicePermissions = DB::table('permissions')
-            ->where('name', 'like', 'contacts.%')
+            ->where(function ($query) {
+                $query
+                    ->where('name', 'like', 'contacts.%')
+                    ->orWhere('name', 'like', 'testimonials.%')
+                    ->orWhere('name', '=', 'dashboard.view');
+            })
             ->pluck('id')
             ->toArray();
 
+        $customerServiceData = [];
         foreach ($customerServicePermissions as $permissionId) {
-            DB::table('permission_role')->insert([
+            $customerServiceData[] = [
                 'role_id' => $customerServiceId,
                 'permission_id' => $permissionId,
-            ]);
+            ];
+        }
+        foreach (array_chunk($customerServiceData, 50) as $chunk) {
+            DB::table('permission_role')->insert($chunk);
         }
 
-        $this->command->info('Permissions assignées aux rôles!');
+        // ============================================
+        // AFFICHAGE RÉCAPITULATIF
+        // ============================================
         $this->command->info('');
-        $this->command->info('=== HIÉRARCHIE DES RÔLES ===');
-        $this->command->info('1. Super Admin: TOUTES les permissions (' . count($allPermissions) . ')');
-        $this->command->info('2. Admin: Toutes sauf suppressions critiques (' . count($adminPermissions) . ')');
-        $this->command->info('3. Manager: Gestion complète du contenu plateforme (' . count($managerPermissions) . ')');
-        $this->command->info('   📌 Disponibilités, Événements, Rendez-vous');
-        $this->command->info('   ✨ Médias (Images & Vidéos) - NOUVEAU');
-        $this->command->info('   📌 Réalisations, Recettes, Témoignages, Pub-Services');
-        $this->command->info('   📌 Produits, Commandes, Hôtels, Réservations, Dons, Contacts');
-        $this->command->info('   📌 Vue paiements uniquement');
-        $this->command->info('4. Receptionist: Hôtels, Réservations et Rendez-vous (' . count($receptionistPermissions) . ')');
-        $this->command->info('5. Customer Service: Contacts uniquement (' . count($customerServicePermissions) . ')');
+        $this->command->info('✅ Permissions assignées aux rôles!');
+        $this->command->info('');
+        $this->command->info('╔══════════════════════════════════════════════════╗');
+        $this->command->info('║          HIÉRARCHIE DES RÔLES                   ║');
+        $this->command->info('╠══════════════════════════════════════════════════╣');
+        $this->command->info('║ 1. 👑 Super Admin    : ' . str_pad(count($allPermissions), 3, ' ', STR_PAD_LEFT) . ' permissions (TOUTES)  ║');
+        $this->command->info('║ 2. 🛡️  Admin          : ' . str_pad(count($adminPermissions), 3, ' ', STR_PAD_LEFT) . ' permissions           ║');
+        $this->command->info('║ 3. 📋 Manager        : ' . str_pad(count($managerPermissions), 3, ' ', STR_PAD_LEFT) . ' permissions           ║');
+        $this->command->info('║ 4. 🏨 Receptionist   : ' . str_pad(count($receptionistPermissions), 3, ' ', STR_PAD_LEFT) . ' permissions           ║');
+        $this->command->info('║ 5. 📞 Customer Svc   : ' . str_pad(count($customerServicePermissions), 3, ' ', STR_PAD_LEFT) . ' permissions           ║');
+        $this->command->info('╚══════════════════════════════════════════════════╝');
+        $this->command->info('');
+        $this->command->info('📌 Manager inclut :');
+        $this->command->info('   • Disponibilités, Événements, Rendez-vous');
+        $this->command->info('   • Réalisations, Recettes, Témoignages');
+        $this->command->info('   • Pub-Services, Bibliographie');
+        $this->command->info('   • Images & Vidéos (Médias)');
+        $this->command->info('   • Produits, Commandes, Hôtels, Réservations');
+        $this->command->info('   • Dons, Contacts, Lives, Liens sociaux');
+        $this->command->info('   • Dashboard (vue + stats)');
+        $this->command->info('');
+        $this->command->info('📌 Receptionist inclut :');
+        $this->command->info('   • Vue disponibilités, Événements');
+        $this->command->info('   • Rendez-vous, Hôtels, Réservations');
+        $this->command->info('   • Paiements, Dashboard');
+        $this->command->info('');
+        $this->command->info('📌 Customer Service inclut :');
+        $this->command->info('   • Contacts, Témoignages, Dashboard');
     }
 }

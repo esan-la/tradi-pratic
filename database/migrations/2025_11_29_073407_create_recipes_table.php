@@ -9,40 +9,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('recipes', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
             $table->string('slug')->unique();
-
-            // Descriptions (CMS)
-            $table->text('short_description')->nullable(); // Résumé court
-            $table->longText('description'); // Description HTML via CMS
-
-            // Données de la recette
-            $table->json('ingredients'); // ["Ingrédient 1", "Ingrédient 2"]
-            $table->json('instructions'); // ["Étape 1", "Étape 2"]
-
-            // Temps et portions
-            $table->integer('prep_time')->nullable(); // Minutes
-            $table->integer('cook_time')->nullable(); // Minutes
-            $table->integer('servings')->nullable(); // Nombre de personnes
-
-            // Catégorie et médias
+            $table->text('short_description')->nullable();
+            $table->longText('description');
+            $table->json('ingredients');
+            $table->json('instructions');
+            $table->integer('prep_time')->nullable();
+            $table->integer('cook_time')->nullable();
+            $table->integer('servings')->nullable();
             $table->string('category')->nullable();
-            $table->string('difficulty')->nullable(); // Facile, Moyen, Difficile
-            $table->string('image')->nullable(); // Image principale
-            $table->json('gallery')->nullable(); // Galerie photos
-            $table->string('video_url')->nullable(); // YouTube/Vimeo
-
-            // Statuts
+            $table->string('difficulty')->nullable();
+            $table->string('image')->nullable();
+            $table->json('gallery')->nullable();
+            $table->string('video_url')->nullable();
             $table->boolean('is_published')->default(true);
             $table->boolean('is_featured')->default(false);
-
-            // Compteurs
             $table->unsignedInteger('views')->default(0);
-
             $table->timestamps();
 
-            // Index
             $table->index('slug');
             $table->index(['is_published', 'created_at']);
             $table->index('category');

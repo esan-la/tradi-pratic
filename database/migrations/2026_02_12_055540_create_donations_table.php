@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('donations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('donor_id')->nullable()->constrained()->onDelete('set null');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('donor_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('type', ['money', 'cheque', 'object', 'package']);
             $table->decimal('amount', 10, 2)->nullable();
             $table->string('currency', 10)->default('XOF');

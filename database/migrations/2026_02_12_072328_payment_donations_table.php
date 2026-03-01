@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_donations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('payment_id')->constrained()->onDelete('cascade');
-            $table->foreignId('donation_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('payment_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('donation_id')->constrained()->onDelete('cascade');
         });
     }
 

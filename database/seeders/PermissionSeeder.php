@@ -1,9 +1,11 @@
 <?php
+// database/seeders/PermissionSeeder.php
 
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class PermissionSeeder extends Seeder
@@ -16,13 +18,17 @@ class PermissionSeeder extends Seeder
         $now = Carbon::now();
 
         $permissions = [
-            // Gestion des utilisateurs
+            // ========================================
+            // GESTION DES UTILISATEURS
+            // ========================================
             ['name' => 'users.view', 'description' => 'Voir les utilisateurs'],
             ['name' => 'users.create', 'description' => 'Créer des utilisateurs'],
             ['name' => 'users.edit', 'description' => 'Modifier les utilisateurs'],
             ['name' => 'users.delete', 'description' => 'Supprimer les utilisateurs'],
 
-            // Gestion des rôles et permissions
+            // ========================================
+            // GESTION DES RÔLES ET PERMISSIONS
+            // ========================================
             ['name' => 'roles.view', 'description' => 'Voir les rôles'],
             ['name' => 'roles.create', 'description' => 'Créer des rôles'],
             ['name' => 'roles.edit', 'description' => 'Modifier les rôles'],
@@ -31,20 +37,16 @@ class PermissionSeeder extends Seeder
             // ========================================
             // SYSTÈME DE DISPONIBILITÉS ET RENDEZ-VOUS
             // ========================================
-
-            // Gestion des disponibilités (Availability Periods)
             ['name' => 'availabilities.view', 'description' => 'Voir les disponibilités'],
             ['name' => 'availabilities.create', 'description' => 'Créer des disponibilités'],
             ['name' => 'availabilities.edit', 'description' => 'Modifier les disponibilités'],
             ['name' => 'availabilities.delete', 'description' => 'Supprimer les disponibilités'],
 
-            // Gestion des événements (Events)
             ['name' => 'events.view', 'description' => 'Voir les événements'],
             ['name' => 'events.create', 'description' => 'Créer des événements'],
             ['name' => 'events.edit', 'description' => 'Modifier les événements'],
             ['name' => 'events.delete', 'description' => 'Supprimer les événements'],
 
-            // Gestion des rendez-vous (Appointments)
             ['name' => 'appointments.view', 'description' => 'Voir les rendez-vous'],
             ['name' => 'appointments.create', 'description' => 'Créer des rendez-vous'],
             ['name' => 'appointments.edit', 'description' => 'Modifier les rendez-vous'],
@@ -53,14 +55,11 @@ class PermissionSeeder extends Seeder
             // ========================================
             // HÔTELLERIE
             // ========================================
-
-            // Gestion des hôtels
             ['name' => 'hotels.view', 'description' => 'Voir les hôtels'],
             ['name' => 'hotels.create', 'description' => 'Créer des hôtels'],
             ['name' => 'hotels.edit', 'description' => 'Modifier les hôtels'],
             ['name' => 'hotels.delete', 'description' => 'Supprimer les hôtels'],
 
-            // Gestion des réservations
             ['name' => 'reservations.view', 'description' => 'Voir les réservations'],
             ['name' => 'reservations.create', 'description' => 'Créer des réservations'],
             ['name' => 'reservations.edit', 'description' => 'Modifier les réservations'],
@@ -71,14 +70,11 @@ class PermissionSeeder extends Seeder
             // ========================================
             // E-COMMERCE
             // ========================================
-
-            // Gestion des produits
             ['name' => 'products.view', 'description' => 'Voir les produits'],
             ['name' => 'products.create', 'description' => 'Créer des produits'],
             ['name' => 'products.edit', 'description' => 'Modifier les produits'],
             ['name' => 'products.delete', 'description' => 'Supprimer les produits'],
 
-            // Gestion des commandes
             ['name' => 'orders.view', 'description' => 'Voir les commandes'],
             ['name' => 'orders.create', 'description' => 'Créer des commandes'],
             ['name' => 'orders.edit', 'description' => 'Modifier les commandes'],
@@ -88,8 +84,6 @@ class PermissionSeeder extends Seeder
             // ========================================
             // DONS
             // ========================================
-
-            // Gestion des dons
             ['name' => 'donations.view', 'description' => 'Voir les dons'],
             ['name' => 'donations.create', 'description' => 'Créer des dons'],
             ['name' => 'donations.edit', 'description' => 'Modifier les dons'],
@@ -99,21 +93,16 @@ class PermissionSeeder extends Seeder
             // ========================================
             // PAIEMENTS
             // ========================================
-
-            // Gestion des paiements
             ['name' => 'payments.view', 'description' => 'Voir les paiements'],
             ['name' => 'payments.process', 'description' => 'Traiter les paiements'],
 
             // ========================================
             // COMMUNICATION
             // ========================================
-
-            // Gestion des contacts
             ['name' => 'contacts.view', 'description' => 'Voir les messages de contact'],
             ['name' => 'contacts.reply', 'description' => 'Répondre aux messages'],
             ['name' => 'contacts.delete', 'description' => 'Supprimer les messages'],
 
-            // Gestion des témoignages
             ['name' => 'testimonials.view', 'description' => 'Voir les témoignages'],
             ['name' => 'testimonials.approve', 'description' => 'Approuver les témoignages'],
             ['name' => 'testimonials.delete', 'description' => 'Supprimer les témoignages'],
@@ -121,22 +110,18 @@ class PermissionSeeder extends Seeder
             // ========================================
             // CONTENU
             // ========================================
-
-            // Gestion des réalisations
             ['name' => 'realisations.view', 'description' => 'Voir les réalisations'],
             ['name' => 'realisations.create', 'description' => 'Créer des réalisations'],
             ['name' => 'realisations.edit', 'description' => 'Modifier les réalisations'],
             ['name' => 'realisations.delete', 'description' => 'Supprimer les réalisations'],
             ['name' => 'realisations.publish', 'description' => 'Publier/dépublier les réalisations'],
 
-            // Gestion des recettes
             ['name' => 'recipes.view', 'description' => 'Voir les recettes'],
             ['name' => 'recipes.create', 'description' => 'Créer des recettes'],
             ['name' => 'recipes.edit', 'description' => 'Modifier les recettes'],
             ['name' => 'recipes.delete', 'description' => 'Supprimer les recettes'],
             ['name' => 'recipes.publish', 'description' => 'Publier/dépublier les recettes'],
 
-            // Gestion de la publicité de services
             ['name' => 'pub-services.view', 'description' => 'Voir les publicités de services'],
             ['name' => 'pub-services.create', 'description' => 'Créer des publicités de services'],
             ['name' => 'pub-services.edit', 'description' => 'Modifier les publicités de services'],
@@ -144,48 +129,93 @@ class PermissionSeeder extends Seeder
             ['name' => 'pub-services.publish', 'description' => 'Publier/dépublier les publicités'],
             ['name' => 'pub-services.approve', 'description' => 'Approuver les publicités'],
 
-            // Gestion de la bibliographie
             ['name' => 'bibliography.view', 'description' => 'Voir la bibliographie'],
             ['name' => 'bibliography.edit', 'description' => 'Modifier la bibliographie'],
 
-            // Médias - Images (8 permissions)
             ['name' => 'media_images.view', 'description' => 'Voir les images'],
             ['name' => 'media_images.create', 'description' => 'Ajouter des images'],
             ['name' => 'media_images.edit', 'description' => 'Modifier les images'],
             ['name' => 'media_images.delete', 'description' => 'Supprimer les images'],
 
-            // Médias - Vidéos (4 permissions)
             ['name' => 'media_videos.view', 'description' => 'Voir les vidéos'],
             ['name' => 'media_videos.create', 'description' => 'Ajouter des vidéos'],
             ['name' => 'media_videos.edit', 'description' => 'Modifier les vidéos'],
             ['name' => 'media_videos.delete', 'description' => 'Supprimer les vidéos'],
 
+            // ========================================
+            // LIVE STREAMS
+            // ========================================
+            ['name' => 'livestreams.view', 'description' => 'Voir les lives'],
+            ['name' => 'livestreams.create', 'description' => 'Créer des lives'],
+            ['name' => 'livestreams.edit', 'description' => 'Modifier les lives'],
+            ['name' => 'livestreams.delete', 'description' => 'Supprimer les lives'],
+            ['name' => 'livestreams.manage', 'description' => 'Gérer les lives (démarrer/arrêter)'],
+
+            // ========================================
+            // LIENS SOCIAUX
+            // ========================================
+            ['name' => 'social-links.view', 'description' => 'Voir les liens sociaux'],
+            ['name' => 'social-links.edit', 'description' => 'Modifier les liens sociaux'],
 
             // ========================================
             // ADMINISTRATION
             // ========================================
-
-            // Gestion des paramètres
             ['name' => 'settings.view', 'description' => 'Voir les paramètres'],
             ['name' => 'settings.edit', 'description' => 'Modifier les paramètres'],
             ['name' => 'settings.clear-cache', 'description' => 'Vider le cache'],
 
-            // Gestion des logs
             ['name' => 'logs.view', 'description' => 'Voir les journaux d\'activité'],
             ['name' => 'logs.clear', 'description' => 'Effacer les journaux d\'activité'],
+
+            // ========================================
+            // DASHBOARD
+            // ========================================
+            ['name' => 'dashboard.view', 'description' => 'Accéder au tableau de bord'],
+            ['name' => 'dashboard.stats', 'description' => 'Voir les statistiques'],
         ];
 
+        // ✅ Ajouter UUID + timestamps à chaque permission
         foreach ($permissions as &$permission) {
+            $permission['id'] = Str::uuid()->toString();
             $permission['created_at'] = $now;
             $permission['updated_at'] = $now;
         }
 
-        DB::table('permissions')->insert($permissions);
+        // ✅ Insérer par lots pour éviter les problèmes de taille
+        $chunks = array_chunk($permissions, 50);
+        foreach ($chunks as $chunk) {
+            DB::table('permissions')->insert($chunk);
+        }
 
+        $this->command->info('');
         $this->command->info('✅ ' . count($permissions) . ' permissions créées avec succès!');
-        $this->command->info('📊 Nouvelles permissions système rendez-vous: 12');
-        $this->command->info('   - Availabilities: 4 permissions');
-        $this->command->info('   - Events: 4 permissions');
-        $this->command->info('   - Appointments: 4 permissions');
+        $this->command->info('');
+        $this->command->info('📊 Détail des permissions :');
+        $this->command->info('   👤 Utilisateurs       : 4 permissions');
+        $this->command->info('   🛡️  Rôles              : 4 permissions');
+        $this->command->info('   📅 Disponibilités     : 4 permissions');
+        $this->command->info('   📆 Événements         : 4 permissions');
+        $this->command->info('   🤝 Rendez-vous        : 4 permissions');
+        $this->command->info('   🏨 Hôtels             : 4 permissions');
+        $this->command->info('   📋 Réservations       : 6 permissions');
+        $this->command->info('   🛒 Produits           : 4 permissions');
+        $this->command->info('   📦 Commandes          : 5 permissions');
+        $this->command->info('   🎁 Dons               : 5 permissions');
+        $this->command->info('   💳 Paiements          : 2 permissions');
+        $this->command->info('   📩 Contacts           : 3 permissions');
+        $this->command->info('   ⭐ Témoignages        : 3 permissions');
+        $this->command->info('   🎨 Réalisations       : 5 permissions');
+        $this->command->info('   🍲 Recettes           : 5 permissions');
+        $this->command->info('   📢 Pub Services       : 6 permissions');
+        $this->command->info('   📖 Bibliographie      : 2 permissions');
+        $this->command->info('   🖼️  Images             : 4 permissions');
+        $this->command->info('   🎬 Vidéos             : 4 permissions');
+        $this->command->info('   📡 Live Streams       : 5 permissions');
+        $this->command->info('   🔗 Liens sociaux      : 2 permissions');
+        $this->command->info('   ⚙️  Paramètres         : 3 permissions');
+        $this->command->info('   📝 Logs               : 2 permissions');
+        $this->command->info('   📊 Dashboard          : 2 permissions');
+        $this->command->info('');
+        $this->command->info('   📌 Total              : ' . count($permissions) . ' permissions');
     }
 }
