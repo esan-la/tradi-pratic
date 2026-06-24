@@ -42,7 +42,7 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->latest()->paginate(15);
+        $orders = $query->latest()->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Order::count(),

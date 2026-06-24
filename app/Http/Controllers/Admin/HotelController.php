@@ -38,7 +38,7 @@ class HotelController extends Controller
             $query->where('city', $request->city);
         }
 
-        $hotels = $query->paginate(15);
+        $hotels = $query->paginate(15)->withQueryString();
         $cities = Hotel::distinct()->pluck('city');
 
         return view('admin.hotels.index', compact('hotels', 'cities'));

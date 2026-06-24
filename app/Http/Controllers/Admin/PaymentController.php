@@ -47,7 +47,7 @@ class PaymentController extends Controller
             });
         }
 
-        $payments = $query->latest()->paginate(15);
+        $payments = $query->latest()->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Payment::count(),

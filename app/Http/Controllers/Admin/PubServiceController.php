@@ -49,7 +49,7 @@ class PubServiceController extends Controller
             });
         }
 
-        $services = $query->latest()->paginate(15);
+        $services = $query->latest()->paginate(15)->withQueryString();
 
         return view('admin.pub-services.index', compact('services'));
     }

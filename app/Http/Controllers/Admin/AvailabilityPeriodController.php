@@ -33,7 +33,8 @@ class AvailabilityPeriodController extends Controller
 
         $availabilities = $query->orderBy('day_of_week')
                                ->orderBy('start_time')
-                               ->paginate(15);
+                               ->paginate(15)
+                               ->withQueryString();
 
         $admins = User::whereHas('roles', function($q) {
             $q->where('name', 'admin');

@@ -172,6 +172,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profil/avatar', [ProfileController::class, 'updateAvatar'])->name('auth.profile.avatar');
     Route::delete('/profil/avatar', [ProfileController::class, 'deleteAvatar'])->name('auth.profile.avatar.delete');
     Route::put('/profil/mot-de-passe', [ProfileController::class, 'updatePassword'])->name('auth.profile.password');
+    Route::delete('/profil', [ProfileController::class, 'destroy'])->name('auth.profile.destroy');
 });
 
 /*

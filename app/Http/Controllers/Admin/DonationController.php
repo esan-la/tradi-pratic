@@ -37,7 +37,7 @@ class DonationController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $donations = $query->latest()->paginate(15);
+        $donations = $query->latest()->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Donation::count(),

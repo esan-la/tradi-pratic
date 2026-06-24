@@ -59,7 +59,7 @@ class LoginController extends Controller
             session()->flash('success', "Bienvenue, {$user->prenom} ! 👋");
 
             // Redirection selon le rôle
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Manager'])) {
+            if ($user->hasAnyRole(['super_admin', 'admin', 'manager'])) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 

@@ -9,12 +9,11 @@ use Illuminate\Support\Facades\Mail;
 use App\Traits\HasUuid;
 use App\Mail\ResetPasswordMail;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\ResetPasswordNotification; // ← CORRECTION ICI
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasUuid;
+    use HasApiTokens, HasFactory, Notifiable, HasUuid;
 
     protected $fillable = [
         'nom',
@@ -40,7 +39,15 @@ class User extends Authenticatable
      */
     public function getFullNameAttribute(): string
     {
-        return $this->prenom . ' ' . $this->nom;
+        return trim(($this->prenom ?? '') . ' ' . ($this->nom ?? ''));
+    }
+
+    /**
+     * Compatibilite avec les vues anciennes qui lisent encore $user->name.
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->full_name ?: $this->email;
     }
 
     /**
@@ -48,8 +55,8 @@ class User extends Authenticatable
      */
     public function getInitialsAttribute(): string
     {
-        $prenom = mb_substr($this->prenom, 0, 1);
-        $nom = mb_substr($this->nom, 0, 1);
+        $prenom = mb_substr($this->prenom ?? '', 0, 1);
+        $nom = mb_substr($this->nom ?? '', 0, 1);
         return mb_strtoupper($prenom . $nom);
     }
 
@@ -129,6 +136,11 @@ class User extends Authenticatable
     public function hasRole($role)
     {
         return $this->roles()->where('name', $role)->exists();
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()->whereIn('name', $roles)->exists();
     }
 
     public function hasPermission($permission)

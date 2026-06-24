@@ -26,7 +26,7 @@ class PubServiceController extends Controller
             });
         }
 
-        $services = $query->paginate(12);
+        $services = $query->paginate(12)->withQueryString();
         $featuredServices = PubService::where('is_published', true)
             ->where('is_featured', true)
             ->latest()

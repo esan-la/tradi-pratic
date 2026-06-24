@@ -36,7 +36,8 @@ class ProfileController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'nom' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|max:2048',

@@ -25,7 +25,7 @@ class DonorController extends Controller
             });
         }
 
-        $donors = $query->latest()->paginate(15);
+        $donors = $query->latest()->paginate(15)->withQueryString();
 
         return view('admin.donors.index', compact('donors'));
     }

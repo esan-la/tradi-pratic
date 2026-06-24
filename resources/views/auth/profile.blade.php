@@ -491,6 +491,42 @@
                                         </button>
                                     </div>
                                 </form>
+
+                                <div class="border-top mt-4 pt-4">
+                                    <div class="alert alert-danger mb-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <i class="fas fa-triangle-exclamation mt-1"></i>
+                                            <div>
+                                                <strong>Supprimer le compte</strong>
+                                                <p class="mb-0 small">Cette action est definitive et supprimera votre profil.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form action="{{ route('auth.profile.destroy') }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Supprimer definitivement votre compte ?')">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md">
+                                                <label for="delete_password" class="form-label fw-semibold">Mot de passe</label>
+                                                <input type="password"
+                                                       class="form-control @error('password') is-invalid @enderror"
+                                                       id="delete_password"
+                                                       name="password"
+                                                       autocomplete="current-password"
+                                                       required>
+                                            </div>
+                                            <div class="col-md-auto">
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash-alt me-2"></i>Supprimer mon compte
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>

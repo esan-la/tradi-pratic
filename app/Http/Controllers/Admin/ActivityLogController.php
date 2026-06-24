@@ -14,54 +14,61 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ActivityLog::query();
+        $query = ActivityLog::with(['causer', 'subject']);
 
-        // Filtre par utilisateur
-        if ($request->has('user_name')) {
-            $query->where('user_name', $request->user_name);
+        if ($request->filled('causer_id')) {
+            $query->where('causer_id', $request->causer_id);
         }
 
-        // Filtre par action
-        if ($request->has('action')) {
-            $query->where('action', 'like', "%{$request->action}%");
-        }
-
-        // Filtre par type de sujet
-        if ($request->has('subject_type')) {
-            $query->where('subject_type', $request->subject_type);
-        }
-
-        // Filtre par date
-        if ($request->has('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->has('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        // Recherche
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('user_name', 'like', "%{$search}%")
-                  ->orWhere('action', 'like', "%{$search}%");
+        if ($request->filled('action')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('event', 'like', "%{$request->action}%")
+                    ->orWhere('log_name', 'like', "%{$request->action}%");
             });
         }
 
-        $logs = $query->latest()->paginate(20);
+        if ($request->filled('subject_type')) {
+            $query->where('subject_type', $request->subject_type);
+        }
 
-        // Récupérer les utilisateurs uniques pour le filtre
-        $users = ActivityLog::distinct('user_name')
-            ->pluck('user_name')
-            ->filter()
-            ->sort();
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
 
-        // Types de sujets uniques
-        $subjectTypes = ActivityLog::distinct('subject_type')
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('log_name', 'like', "%{$search}%")
+                    ->orWhere('event', 'like', "%{$search}%")
+                    ->orWhereHas('causer', function ($causerQuery) use ($search) {
+                        $causerQuery->where('nom', 'like', "%{$search}%")
+                            ->orWhere('prenom', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $logs = $query->latest()->paginate(20)->withQueryString();
+
+        $users = User::whereIn('id', ActivityLog::query()
+            ->where('causer_type', User::class)
+            ->whereNotNull('causer_id')
+            ->select('causer_id'))
+            ->orderBy('prenom')
+            ->get();
+
+        $subjectTypes = ActivityLog::query()
+            ->whereNotNull('subject_type')
+            ->distinct()
             ->pluck('subject_type')
-            ->filter()
-            ->sort();
+            ->sort()
+            ->values();
 
         return view('admin.activity-logs.index', compact('logs', 'users', 'subjectTypes'));
     }
@@ -71,11 +78,13 @@ class ActivityLogController extends Controller
      */
     public function show(ActivityLog $activityLog)
     {
+        $activityLog->load(['causer', 'subject']);
+
         return view('admin.activity-logs.show', compact('activityLog'));
     }
 
     /**
-     * Clear old logs
+     * Clear old logs.
      */
     public function clear(Request $request)
     {
@@ -88,61 +97,54 @@ class ActivityLogController extends Controller
 
         ActivityLog::where('created_at', '<', $date)->delete();
 
-        activity()
+        activity('system')
             ->causedBy(auth()->user())
             ->log("Suppression de $count logs de plus de {$validated['days']} jours");
 
-        return back()->with('success', "$count enregistrement(s) supprimé(s).");
+        return back()->with('success', "$count enregistrement(s) supprime(s).");
     }
 
     /**
-     * Export logs
+     * Export logs.
      */
     public function export(Request $request)
     {
-        $query = ActivityLog::query();
+        $query = ActivityLog::with('causer');
 
-        // Appliquer les mêmes filtres que l'index
-        if ($request->has('user_name')) {
-            $query->where('user_name', $request->user_name);
+        if ($request->filled('causer_id')) {
+            $query->where('causer_id', $request->causer_id);
         }
-        if ($request->has('date_from')) {
+
+        if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-        if ($request->has('date_to')) {
+
+        if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
         $logs = $query->latest()->get();
-
         $filename = 'activity_logs_' . now()->format('Y-m-d_His') . '.csv';
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function() use ($logs) {
+        return response()->streamDownload(function () use ($logs) {
             $file = fopen('php://output', 'w');
 
-            // Headers
-            fputcsv($file, ['Date', 'Utilisateur', 'Action', 'Description', 'IP', 'User Agent']);
+            fputcsv($file, ['Date', 'Utilisateur', 'Log', 'Action', 'Description', 'Sujet']);
 
-            // Data
             foreach ($logs as $log) {
                 fputcsv($file, [
-                    $log->created_at->format('Y-m-d H:i:s'),
-                    $log->user_name ?? 'Système',
+                    optional($log->created_at)->format('Y-m-d H:i:s'),
+                    $log->user_name,
+                    $log->log_name ?? '-',
                     $log->action ?? '-',
                     $log->description ?? '-',
-                    $log->ip_address ?? '-',
-                    $log->user_agent ?? '-',
+                    class_basename($log->subject_type ?? '') ?: '-',
                 ]);
             }
 
             fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

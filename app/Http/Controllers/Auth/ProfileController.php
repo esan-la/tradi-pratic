@@ -7,7 +7,6 @@ use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -72,6 +71,8 @@ class ProfileController extends Controller
      */
     public function updateAvatar(Request $request)
     {
+        $validated = [];
+
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
@@ -115,7 +116,7 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         if ($user->avatar) {
-            $this->mediaService->delete('avatar' . $user->avatar);
+            $this->mediaService->delete($user->avatar);
             $user->update(['avatar' => null]);
         }
 
@@ -152,5 +153,31 @@ class ProfileController extends Controller
         ]);
 
         return back()->with('password_success', 'Votre mot de passe a été changé avec succès !');
+    }
+    /**
+     * Supprimer le compte connecte.
+     */
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ], [
+            'password.required' => 'Veuillez saisir votre mot de passe.',
+            'password.current_password' => 'Le mot de passe est incorrect.',
+        ]);
+
+        $user = Auth::user();
+
+        if ($user->avatar) {
+            $this->mediaService->delete($user->avatar);
+        }
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $user->delete();
+
+        return redirect()->route('home')->with('success', 'Votre compte a ete supprime avec succes.');
     }
 }

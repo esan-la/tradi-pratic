@@ -10,7 +10,9 @@ if (!function_exists('activity')) {
     {
         // Si le package Spatie est installé, l'utiliser
         if (class_exists(\Spatie\Activitylog\ActivityLogger::class)) {
-            return app(\Spatie\Activitylog\ActivityLogger::class);
+            $logger = app(\Spatie\Activitylog\ActivityLogger::class);
+
+            return $log ? $logger->useLog($log) : $logger;
         }
 
         // Sinon, retourner un mock qui ne fait rien

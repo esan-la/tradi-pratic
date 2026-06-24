@@ -32,7 +32,7 @@ class ContactController extends Controller
             });
         }
 
-        $contacts = $query->latest()->paginate(15);
+        $contacts = $query->latest()->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Contact::count(),

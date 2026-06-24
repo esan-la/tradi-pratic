@@ -31,7 +31,7 @@ class RoomController extends Controller
             $query->where('is_available', $request->is_available);
         }
 
-        $rooms = $query->paginate(15);
+        $rooms = $query->paginate(15)->withQueryString();
         $hotels = Hotel::all();
 
         return view('admin.rooms.index', compact('rooms', 'hotels'));

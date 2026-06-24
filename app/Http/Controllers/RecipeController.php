@@ -158,7 +158,8 @@ class RecipeController extends Controller
         $recipes = Recipe::where('is_published', true)
             ->where('category', $category)
             ->orderBy('created_at', 'desc')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         $categories = [
             'Entrée' => 'Entrée',

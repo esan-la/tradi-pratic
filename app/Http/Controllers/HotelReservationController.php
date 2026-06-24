@@ -51,7 +51,7 @@ class HotelReservationController extends Controller
             });
         }
 
-        $reservations = $query->latest()->paginate(15);
+        $reservations = $query->latest()->paginate(15)->withQueryString();
         $hotels = Hotel::all();
 
         return view('admin.hotels.reservations.index', compact('reservations', 'hotels'));

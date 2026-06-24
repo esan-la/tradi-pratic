@@ -58,7 +58,7 @@ class AppointmentController extends Controller
             });
         }
 
-        $appointments = $query->latest()->paginate(15);
+        $appointments = $query->latest()->paginate(15)->withQueryString();
 
         return view('admin.appointments.index', compact('appointments'));
     }

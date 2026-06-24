@@ -140,7 +140,8 @@ class RealisationController extends Controller
             ->where('category', $category)
             ->orderBy('order', 'asc')
             ->orderBy('created_at', 'desc')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         $categories = [
             'Agriculture' => 'Agriculture',
